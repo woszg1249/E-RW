@@ -23,7 +23,7 @@
             background: #ffffff;
             border-radius: 24px;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-            max-width: 680px;
+            max-width: 720px;
             width: 100%;
             padding: 40px 36px;
         }
@@ -52,6 +52,21 @@
             color: white;
             transform: translateY(-1px);
         }
+        .option-card {
+            border: 1.5px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .option-card:hover {
+            border-color: #059669;
+            background-color: #f0fdf4;
+        }
+        .option-card.selected {
+            border-color: #059669;
+            background-color: #f0fdf4;
+        }
     </style>
 </head>
 <body>
@@ -60,11 +75,12 @@
         <div class="text-center mb-4">
             <img src="{{ asset('img/logo_ert_rw.svg') }}" alt="Logo RT RW" style="width: 56px; height: 56px;" class="mb-2">
             <h4 class="fw-bold text-dark mb-1">Pendaftaran Akun Warga Baru</h4>
-            <p class="text-muted small">Lengkapi formulir di bawah ini untuk terdaftar dalam sistem E-RT RW Digital RW 19</p>
+            <p class="text-muted small">Lengkapi formulir pendaftaran warga resmi lingkungan RW 19 (RT 06 & RT 07)</p>
         </div>
 
         @if($errors->any())
             <div class="alert alert-danger rounded-3 p-3 small mb-3">
+                <div class="fw-bold mb-1"><i class="fa-solid fa-triangle-exclamation me-1"></i> Mohon periksa kembali formulir:</div>
                 <ul class="mb-0 ps-3">
                     @foreach($errors->all() as $err)
                         <li>{{ $err }}</li>
@@ -75,28 +91,86 @@
 
         <form action="{{ route('register') }}" method="POST">
             @csrf
+
+            <!-- 1. PILIHAN STATUS KELUARGA / KK -->
+            <div class="mb-3">
+                <label class="form-label fw-bold small text-dark">Status Pendaftaran Dalam Kartu Keluarga (KK) <span class="text-danger">*</span></label>
+                <div class="row g-2">
+                    <div class="col-md-6">
+                        <label class="option-card d-flex align-items-center gap-2 w-100" id="card_kk_baru">
+                            <input type="radio" name="tipe_kk" value="baru" id="radio_kk_baru" {{ old('tipe_kk', 'baru') === 'baru' ? 'checked' : '' }} onchange="updateTipeKk('baru')">
+                            <div>
+                                <div class="fw-bold text-dark small">Buat KK Baru (Kepala Keluarga)</div>
+                                <div class="text-muted" style="font-size: 0.78rem;">Saya mendaftar sebagai Kepala Keluarga</div>
+                            </div>
+                        </label>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="option-card d-flex align-items-center gap-2 w-100" id="card_kk_gabung">
+                            <input type="radio" name="tipe_kk" value="gabung" id="radio_kk_gabung" {{ old('tipe_kk') === 'gabung' ? 'checked' : '' }} onchange="updateTipeKk('gabung')">
+                            <div>
+                                <div class="fw-bold text-dark small">Gabung ke KK yang Ada (Anggota)</div>
+                                <div class="text-muted" style="font-size: 0.78rem;">Saya adalah Istri, Anak, atau Famili</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
             <div class="row g-3">
                 <div class="col-md-6">
                     <label class="form-label fw-semibold small text-secondary">Nama Lengkap Sesuai KTP <span class="text-danger">*</span></label>
                     <input type="text" name="nama" class="form-control" placeholder="Contoh: Ahmad Fauzi" value="{{ old('nama') }}" required>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label fw-semibold small text-secondary">Nomor Induk Kependudukan (NIK)</label>
-                    <input type="text" name="nik" id="reg_nik" class="form-control" placeholder="16 digit NIK" value="{{ old('nik') }}" maxlength="16">
+                    <label class="form-label fw-semibold small text-secondary">Nomor Induk Kependudukan (NIK) <span class="text-danger">*</span></label>
+                    <input type="text" name="nik" id="reg_nik" class="form-control" placeholder="16 digit NIK" value="{{ old('nik') }}" maxlength="16" required>
                     <div id="nik_feedback" class="small mt-1 d-none"></div>
                 </div>
 
                 <div class="col-md-6">
-                    <label class="form-label fw-semibold small text-secondary">Nomor Kartu Keluarga (KK)</label>
-                    <input type="text" name="no_kk" id="reg_kk" class="form-control" placeholder="16 digit No KK" value="{{ old('no_kk') }}" maxlength="16">
+                    <label class="form-label fw-semibold small text-secondary">Nomor Kartu Keluarga (KK) <span class="text-danger">*</span></label>
+                    <input type="text" name="no_kk" id="reg_kk" class="form-control" placeholder="16 digit No KK" value="{{ old('no_kk') }}" maxlength="16" required>
                     <div id="kk_feedback" class="small mt-1 d-none"></div>
                 </div>
+
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold small text-secondary">Hubungan Dalam Keluarga <span class="text-danger">*</span></label>
+                    <select name="status_keluarga" id="reg_status_keluarga" class="form-select" required>
+                        <option value="Kepala Keluarga" {{ old('status_keluarga') === 'Kepala Keluarga' ? 'selected' : '' }}>Kepala Keluarga</option>
+                        <option value="Istri" {{ old('status_keluarga') === 'Istri' ? 'selected' : '' }}>Istri</option>
+                        <option value="Anak" {{ old('status_keluarga') === 'Anak' ? 'selected' : '' }}>Anak</option>
+                        <option value="Famili Lain" {{ old('status_keluarga') === 'Famili Lain' ? 'selected' : '' }}>Famili Lain</option>
+                    </select>
+                </div>
+
+                <!-- BOX KONFIRMASI KELUARGA (Jika Gabung KK) -->
+                <div class="col-12 d-none" id="boxKonfirmasiKeluarga">
+                    <div class="p-3 rounded-3 border bg-light">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <i class="fa-solid fa-users text-primary fs-5"></i>
+                            <div class="fw-bold text-dark small" id="teksInfoKeluarga">Memeriksa data Kartu Keluarga...</div>
+                        </div>
+                        <p class="text-muted small mb-2" id="teksDetailKk">Pastikan nomor KK yang Anda masukkan benar milik keluarga Anda.</p>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="konfirmasi_kk" value="ya" id="check_konfirmasi_kk">
+                            <label class="form-check-label small fw-semibold" for="check_konfirmasi_kk">
+                                Ya, saya mengonfirmasi bahwa saya benar adalah anggota keluarga dari KK ini.
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="col-md-6">
                     <label class="form-label fw-semibold small text-secondary">Jenis Kelamin <span class="text-danger">*</span></label>
                     <select name="kelamin" class="form-select" required>
                         <option value="Laki-laki" {{ old('kelamin') == 'Laki-laki' ? 'selected' : '' }}>Laki-laki</option>
                         <option value="Perempuan" {{ old('kelamin') == 'Perempuan' ? 'selected' : '' }}>Perempuan</option>
                     </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold small text-secondary">Nomor WhatsApp / HP</label>
+                    <input type="text" name="no_hp" class="form-control" placeholder="08xxxxxxxxxx" value="{{ old('no_hp') }}">
                 </div>
 
                 <div class="col-md-6">
@@ -117,25 +191,21 @@
                     <input type="password" name="password_confirmation" class="form-control" placeholder="Ulangi password" required>
                 </div>
 
-                <div class="col-md-4">
-                    <label class="form-label fw-semibold small text-secondary">Nomor WhatsApp / HP</label>
-                    <input type="text" name="no_hp" class="form-control" placeholder="08xxxxxxxxxx" value="{{ old('no_hp') }}">
-                </div>
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <label class="form-label fw-semibold small text-secondary">Wilayah RT <span class="text-danger">*</span></label>
                     <select name="rt" id="reg_rt" class="form-select" required>
                         <option value="06" {{ old('rt') == '06' ? 'selected' : '' }}>RT 06 (Ketua: Dimas)</option>
                         <option value="07" {{ old('rt') == '07' ? 'selected' : '' }}>RT 07 (Ketua: Bambang)</option>
                     </select>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <label class="form-label fw-semibold small text-secondary">Wilayah RW</label>
                     <input type="text" name="rw" id="reg_rw" class="form-control" value="19" readonly>
                 </div>
 
                 <div class="col-12">
                     <label class="form-label fw-semibold small text-secondary">Alamat Domisili Lengkap</label>
-                    <textarea name="alamat" id="reg_alamat" rows="2" class="form-control" placeholder="Nama jalan, nomor rumah, gang, dll">{{ old('alamat') }}</textarea>
+                    <textarea name="alamat" id="reg_alamat" rows="2" class="form-control" placeholder="Jl. Melati Blok X No. Y">{{ old('alamat') }}</textarea>
                 </div>
             </div>
 
@@ -153,6 +223,29 @@
     </div>
 
     <script>
+        function updateTipeKk(tipe) {
+            const statusSelect = document.getElementById('reg_status_keluarga');
+            const boxKk = document.getElementById('boxKonfirmasiKeluarga');
+            const cardBaru = document.getElementById('card_kk_baru');
+            const cardGabung = document.getElementById('card_kk_gabung');
+
+            if (tipe === 'baru') {
+                cardBaru.classList.add('selected');
+                cardGabung.classList.remove('selected');
+                boxKk.classList.add('d-none');
+                statusSelect.innerHTML = '<option value="Kepala Keluarga" selected>Kepala Keluarga</option>';
+            } else {
+                cardBaru.classList.remove('selected');
+                cardGabung.classList.add('selected');
+                statusSelect.innerHTML = `
+                    <option value="Istri">Istri</option>
+                    <option value="Anak" selected>Anak</option>
+                    <option value="Famili Lain">Famili Lain</option>
+                `;
+                cekKkRealtime();
+            }
+        }
+
         // Cek NIK Realtime
         const nikInput = document.getElementById('reg_nik');
         const nikFeedback = document.getElementById('nik_feedback');
@@ -161,7 +254,7 @@
         nikInput.addEventListener('input', function() {
             clearTimeout(nikTimeout);
             const val = this.value.trim();
-            if (val.length >= 12) {
+            if (val.length === 16) {
                 nikTimeout = setTimeout(() => {
                     fetch(`{{ route('ajax.check.nik') }}?nik=${val}`)
                         .then(res => res.json())
@@ -175,7 +268,7 @@
                                 nikFeedback.innerHTML = `<i class="fa-solid fa-circle-check me-1"></i> NIK valid & belum terdaftar.`;
                             }
                         });
-                }, 400);
+                }, 300);
             } else {
                 nikFeedback.classList.add('d-none');
             }
@@ -186,35 +279,56 @@
         const kkFeedback = document.getElementById('kk_feedback');
         const alamatInput = document.getElementById('reg_alamat');
         const rtSelect = document.getElementById('reg_rt');
+        const boxKonfirmasi = document.getElementById('boxKonfirmasiKeluarga');
+        const teksInfo = document.getElementById('teksInfoKeluarga');
+        const teksDetail = document.getElementById('teksDetailKk');
         let kkTimeout;
+
+        function cekKkRealtime() {
+            const val = kkInput.value.trim();
+            const isGabung = document.getElementById('radio_kk_gabung').checked;
+
+            if (val.length === 16) {
+                fetch(`{{ route('ajax.check.kk') }}?no_kk=${val}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        kkFeedback.classList.remove('d-none');
+                        if (data.found) {
+                            if (isGabung) {
+                                boxKonfirmasi.classList.remove('d-none');
+                                teksInfo.innerHTML = `Kartu Keluarga Ditemukan: Kepala Keluarga: <strong>${data.kepala_keluarga}</strong> (${data.total_anggota} Anggota)`;
+                                teksDetail.innerHTML = `Alamat: ${data.alamat || '-'} • Wilayah: RT ${data.rt}/RW 19. Alamat dan RT otomatis disinkronkan.`;
+                            }
+                            kkFeedback.className = 'small mt-1 text-primary fw-semibold';
+                            kkFeedback.innerHTML = `<i class="fa-solid fa-users me-1"></i> Terdaftar atas Kepala Keluarga: <strong>${data.kepala_keluarga}</strong>.`;
+                            if (data.alamat) alamatInput.value = data.alamat;
+                            if (data.rt) rtSelect.value = data.rt;
+                        } else {
+                            boxKonfirmasi.classList.add('d-none');
+                            if (isGabung) {
+                                kkFeedback.className = 'small mt-1 text-danger fw-semibold';
+                                kkFeedback.innerHTML = `<i class="fa-solid fa-circle-exclamation me-1"></i> No KK belum ada di sistem. Jika Anda Kepala Keluarga baru, pilih "Buat KK Baru".`;
+                            } else {
+                                kkFeedback.className = 'small mt-1 text-success fw-semibold';
+                                kkFeedback.innerHTML = `<i class="fa-solid fa-circle-check me-1"></i> Nomor KK baru. Anda terdaftar sebagai Kepala Keluarga.`;
+                            }
+                        }
+                    });
+            } else {
+                kkFeedback.classList.add('d-none');
+                boxKonfirmasi.classList.add('d-none');
+            }
+        }
 
         kkInput.addEventListener('input', function() {
             clearTimeout(kkTimeout);
-            const val = this.value.trim();
-            if (val.length >= 12) {
-                kkTimeout = setTimeout(() => {
-                    fetch(`{{ route('ajax.check.kk') }}?no_kk=${val}`)
-                        .then(res => res.json())
-                        .then(data => {
-                            kkFeedback.classList.remove('d-none');
-                            if (data.found) {
-                                kkFeedback.className = 'small mt-1 text-primary fw-semibold';
-                                kkFeedback.innerHTML = `<i class="fa-solid fa-users me-1"></i> KK terdaftar atas nama: <strong>${data.kepala_keluarga}</strong> (${data.total_anggota} anggota). Alamat & RT otomatis diisi.`;
-                                if (!alamatInput.value && data.alamat) {
-                                    alamatInput.value = data.alamat;
-                                }
-                                if (data.rt) {
-                                    rtSelect.value = data.rt;
-                                }
-                            } else {
-                                kkFeedback.className = 'small mt-1 text-muted';
-                                kkFeedback.innerHTML = `<i class="fa-solid fa-circle-info me-1"></i> Nomor KK baru. Anda akan terdaftar sebagai anggota / kepala keluarga baru.`;
-                            }
-                        });
-                }, 400);
-            } else {
-                kkFeedback.classList.add('d-none');
-            }
+            kkTimeout = setTimeout(cekKkRealtime, 300);
+        });
+
+        // Initialize state on load
+        document.addEventListener('DOMContentLoaded', function() {
+            const selectedTipe = document.querySelector('input[name="tipe_kk"]:checked')?.value || 'baru';
+            updateTipeKk(selectedTipe);
         });
     </script>
 </body>
