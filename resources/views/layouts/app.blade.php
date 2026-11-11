@@ -349,6 +349,16 @@
                 <i class="fa-solid fa-user-gear"></i>
                 <span>Profil Akun</span>
             </a>
+
+            <div class="menu-header">Bantuan & Panduan</div>
+            <a href="{{ route('panduan') }}" class="nav-item-custom {{ request()->routeIs('panduan') ? 'active' : '' }}">
+                <i class="fa-solid fa-book-open-reader"></i>
+                <span>Panduan Aplikasi</span>
+            </a>
+            <a href="{{ route('landing') }}" class="nav-item-custom">
+                <i class="fa-solid fa-house-chimney"></i>
+                <span>Halaman Utama</span>
+            </a>
         </div>
     </nav>
 

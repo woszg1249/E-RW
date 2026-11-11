@@ -112,9 +112,18 @@
                 <i class="fa-solid fa-right-to-bracket me-2"></i> Masuk Sekarang
             </button>
 
-            <div class="text-center">
+            <div class="text-center mb-3">
                 <span class="text-muted small">Belum punya akun warga?</span>
                 <a href="{{ route('register') }}" class="fw-bold text-success text-decoration-none small">Daftar Warga</a>
+            </div>
+
+            <div class="text-center pt-3 border-top d-flex justify-content-between align-items-center">
+                <a href="{{ route('landing') }}" class="text-decoration-none small text-muted">
+                    <i class="fa-solid fa-arrow-left me-1"></i> Ke Beranda
+                </a>
+                <a href="{{ route('landing') }}#panduan" class="text-decoration-none small text-primary fw-semibold">
+                    <i class="fa-solid fa-book-open me-1"></i> Panduan Aplikasi
+                </a>
             </div>
         </form>
     </div>

@@ -8,6 +8,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\KegiatanController;
 use App\Http\Controllers\KeuanganController;
 use App\Http\Controllers\KoperasiController;
+use App\Http\Controllers\LandingController;
 use App\Http\Controllers\PosyanduController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SuratController;
@@ -15,6 +16,10 @@ use App\Http\Controllers\TagihanController;
 use App\Http\Controllers\UmkmController;
 use App\Http\Controllers\WargaController;
 use Illuminate\Support\Facades\Route;
+
+// Public Landing Page & Panduan Penggunaan
+Route::get('/', [LandingController::class, 'index'])->name('landing');
+Route::get('/panduan', [LandingController::class, 'panduan'])->name('panduan');
 
 // Guest Authentication Routes
 Route::middleware('guest')->group(function () {
@@ -35,8 +40,8 @@ Route::post('/api/iot/bank-warga/tap', [BankWargaController::class, 'apiIotTap']
 // Protected Routes (Warga & Admin)
 Route::middleware('auth')->group(function () {
     // Dashboard
-    Route::get('/', [DashboardController::class, 'index'])->name('home');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/home', fn () => redirect()->route('dashboard'))->name('home');
 
     // Keuangan Kas RT (Khusus Admin / Pengurus RT)
     Route::get('/keuangan', [KeuanganController::class, 'index'])->name('keuangan.index')->middleware('admin');
