@@ -99,14 +99,30 @@ Akses di browser melalui: `http://127.0.0.1:8000`
 
 ---
 
-## 🔑 Akun Demo Siap Pakai
+## 🚀 Panduan Deployment ke Production / VPS
 
-Tersedia tombol demo pada halaman login:
-
-| Peran | Username | Password |
-|---|---|---|
-| **Admin / Pengurus RT** | `admin` | `admin` |
-| **Warga** | `gus.usuma31` | `Password123` |
+Saat aplikasi di-deploy ke server VPS:
+1. **Clone & Setup Environment**:
+   ```bash
+   git clone https://github.com/woszg1249/E-RW.git
+   cd E-RW
+   cp .env.example .env
+   composer install --no-dev --optimize-autoloader
+   php artisan key:generate
+   ```
+2. **Konfigurasi Database & Domain**:
+   Sesuaikan konfigurasi database (`DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`) dan `APP_URL` di file `.env`.
+3. **Migrasi Database & Storage**:
+   ```bash
+   php artisan migrate --force
+   php artisan storage:link
+   ```
+4. **Optimasi Cache Laravel**:
+   ```bash
+   php artisan config:cache
+   php artisan route:cache
+   php artisan view:cache
+   ```
 
 ---
 
@@ -115,4 +131,4 @@ Tersedia tombol demo pada halaman login:
 cd C:\laragon\www\E-RW
 php artisan test
 ```
-Semua rute, middleware, autentikasi, dan endpoint API IoT telah lolos pengujian (20/20 assertions passed).
+Semua rute, middleware, otentikasi role Warga & Admin, serta endpoint API telah lolos pengujian otomatis.

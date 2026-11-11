@@ -60,14 +60,6 @@
             transform: translateY(-1px);
             color: white;
         }
-        .demo-box {
-            background: #f8fafc;
-            border: 1px dashed #cbd5e1;
-            border-radius: 12px;
-            padding: 12px 14px;
-            font-size: 0.85rem;
-            margin-top: 20px;
-        }
     </style>
 </head>
 <body>
@@ -76,7 +68,7 @@
         <div class="text-center mb-4">
             <img src="{{ asset('img/logo_ert_rw.svg') }}" alt="Logo RT RW" class="brand-icon">
             <h4 class="fw-bold text-dark mb-1">E-RT RW Bersatu</h4>
-            <p class="text-muted small">Sistem Informasi Manajemen RT 06 / RW 19</p>
+            <p class="text-muted small">Sistem Informasi Manajemen RW 19 (RT 06 & RT 07)</p>
         </div>
 
         @if(session('success'))
@@ -125,25 +117,6 @@
                 <a href="{{ route('register') }}" class="fw-bold text-success text-decoration-none small">Daftar Warga</a>
             </div>
         </form>
-
-        <div class="demo-box">
-            <div class="fw-bold text-dark mb-1"><i class="fa-solid fa-bolt text-warning me-1"></i> Quick Demo Login:</div>
-            <div class="d-flex gap-2 mt-2">
-                <button type="button" class="btn btn-sm btn-outline-danger w-50 py-1" onclick="setDemo('admin', 'admin')">
-                    <i class="fa-solid fa-user-shield me-1"></i> Admin
-                </button>
-                <button type="button" class="btn btn-sm btn-outline-success w-50 py-1" onclick="setDemo('gus.usuma31', 'Password123')">
-                    <i class="fa-solid fa-user me-1"></i> Warga
-                </button>
-            </div>
-        </div>
     </div>
-
-    <script>
-        function setDemo(username, password) {
-            document.getElementById('loginInput').value = username;
-            document.getElementById('passwordInput').value = password;
-        }
-    </script>
 </body>
 </html>
