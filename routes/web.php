@@ -58,9 +58,10 @@ Route::middleware('auth')->group(function () {
 
     // Kegiatan RT/RW
     Route::get('/kegiatan', [KegiatanController::class, 'index'])->name('kegiatan.index');
-    Route::post('/kegiatan', [KegiatanController::class, 'store'])->name('kegiatan.store')->middleware('admin');
-    Route::put('/kegiatan/{id}', [KegiatanController::class, 'update'])->name('kegiatan.update')->middleware('admin');
-    Route::delete('/kegiatan/{id}', [KegiatanController::class, 'destroy'])->name('kegiatan.destroy')->middleware('admin');
+    Route::post('/kegiatan', [KegiatanController::class, 'store'])->name('kegiatan.store');
+    Route::put('/kegiatan/{id}', [KegiatanController::class, 'update'])->name('kegiatan.update');
+    Route::match(['get', 'delete'], '/kegiatan/{id}', [KegiatanController::class, 'destroy'])->name('kegiatan.destroy');
+    Route::get('/kegiatan/{id}/hapus', [KegiatanController::class, 'destroy'])->name('kegiatan.hapus');
 
     // Surat Pengantar RT/RW
     Route::get('/surat', [SuratController::class, 'index'])->name('surat.index');

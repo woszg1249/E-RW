@@ -15,6 +15,10 @@ class KegiatanController extends Controller
 
     public function store(Request $request)
     {
+        if (!auth()->user()->isAdmin()) {
+            return redirect()->route('kegiatan.index')->with('error', 'Hanya Pengurus / Admin RT yang dapat mempublikasikan agenda kegiatan.');
+        }
+
         $validated = $request->validate([
             'judul' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
@@ -35,6 +39,11 @@ class KegiatanController extends Controller
     public function update(Request $request, $id)
     {
         $kegiatan = Kegiatan::findOrFail($id);
+
+        if (!auth()->user()->isAdmin() && $kegiatan->dibuat_oleh !== auth()->id()) {
+            return redirect()->route('kegiatan.index')->with('error', 'Anda tidak memiliki hak untuk mengubah kegiatan ini.');
+        }
+
         $validated = $request->validate([
             'judul' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
@@ -51,9 +60,19 @@ class KegiatanController extends Controller
 
     public function destroy($id)
     {
-        $kegiatan = Kegiatan::findOrFail($id);
+        $kegiatan = Kegiatan::find($id);
+
+        if (!$kegiatan) {
+            return redirect()->route('kegiatan.index')->with('info', 'Kegiatan dengan ID #' . $id . ' sudah tidak ada atau telah dihapus sebelumnya.');
+        }
+
+        if (!auth()->user()->isAdmin() && $kegiatan->dibuat_oleh !== auth()->id()) {
+            return redirect()->route('kegiatan.index')->with('error', 'Akses ditolak. Anda tidak memiliki izin untuk menghapus kegiatan ini.');
+        }
+
+        $judul = $kegiatan->judul;
         $kegiatan->delete();
 
-        return redirect()->route('kegiatan.index')->with('success', 'Agenda kegiatan berhasil dihapus.');
+        return redirect()->route('kegiatan.index')->with('success', 'Agenda kegiatan "' . $judul . '" berhasil dihapus.');
     }
 }
