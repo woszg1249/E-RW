@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BankWargaRekening;
 use App\Models\Keuangan;
 use App\Models\NotifDismissed;
 use App\Models\Tagihan;
 use App\Models\TransaksiPembayaran;
 use App\Models\User;
+use App\Services\BankWargaService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -55,7 +57,13 @@ class TagihanController extends Controller
 
         $daftarWarga = $user->isAdmin() ? User::where('role', 'Warga')->orderBy('nama', 'asc')->get() : [];
 
-        return view('tagihan.index', compact('tagihanList', 'totalTunggakan', 'totalLunas', 'daftarWarga'));
+        // Rekening Bank Digital Warga untuk pembayaran instan
+        $rekeningBankWarga = null;
+        if ($user->isWarga()) {
+            $rekeningBankWarga = BankWargaRekening::getOrCreateForUser($user);
+        }
+
+        return view('tagihan.index', compact('tagihanList', 'totalTunggakan', 'totalLunas', 'daftarWarga', 'rekeningBankWarga'));
     }
 
     public function generate(Request $request)
@@ -122,6 +130,30 @@ class TagihanController extends Controller
 
         $namaWarga = $tagihan->user->nama ?? (auth()->user()->nama ?? 'Warga');
         $rtWarga = $tagihan->user->rt ?? (auth()->user()->rt ?? '06');
+        $metode = $request->metode ?? 'QRIS Digital';
+
+        // Jika metode pembayaran menggunakan Bank Digital Warga, potong saldo secara otomatis
+        if ($metode === 'Bank Digital Warga') {
+            $userPemilik = $tagihan->user ?? auth()->user();
+            $rekening = BankWargaRekening::getOrCreateForUser($userPemilik);
+
+            if ((float) $rekening->saldo < (float) $tagihan->jumlah) {
+                return back()->with('error', 'Gagal memproses pembayaran: Saldo Bank Digital Warga tidak mencukupi (Saldo saat ini: Rp ' . number_format($rekening->saldo, 0, ',', '.') . '). Silakan Top-Up saldo atau setor sampah terlebih dahulu.');
+            }
+
+            try {
+                BankWargaService::tarikDana(
+                    $rekening,
+                    (float) $tagihan->jumlah,
+                    'bayar_iuran',
+                    "Pembayaran {$tagihan->bulan_tahun} - {$namaWarga}",
+                    'Bank Digital Warga',
+                    (string) $tagihan->id_tagihan
+                );
+            } catch (\Exception $e) {
+                return back()->with('error', $e->getMessage());
+            }
+        }
 
         $tagihan->update([
             'status_bayar' => 'Lunas',
@@ -136,7 +168,7 @@ class TagihanController extends Controller
             'keterangan' => "Iuran {$tagihan->bulan_tahun} - {$namaWarga} (RT {$rtWarga}/RW 19)",
             'jumlah' => (int) $tagihan->jumlah,
             'id_tagihan' => $tagihan->id_tagihan,
-            'metode' => $request->metode ?? 'QRIS Digital',
+            'metode' => $metode,
             'status' => 'success',
             'paid_at' => now(),
             'created_at' => now(),
@@ -145,7 +177,7 @@ class TagihanController extends Controller
         Keuangan::create([
             'nama_warga' => $namaWarga,
             'jenis' => 'masuk',
-            'keterangan' => "Iuran {$tagihan->bulan_tahun} - {$namaWarga} (RT {$rtWarga}/RW 19) [" . ($request->metode ?? 'QRIS Digital') . "]",
+            'keterangan' => "Iuran {$tagihan->bulan_tahun} - {$namaWarga} (RT {$rtWarga}/RW 19) [{$metode}]",
             'jumlah' => $tagihan->jumlah,
             'tanggal' => now()->toDateString(),
         ]);

@@ -331,6 +331,10 @@
                 <i class="fa-solid fa-recycle"></i>
                 <span>Bank Sampah</span>
             </a>
+            <a href="{{ route('bank-warga.index') }}" class="nav-item-custom {{ request()->routeIs('bank-warga.index') ? 'active' : '' }}">
+                <i class="fa-solid fa-building-columns"></i>
+                <span>Bank Digital Warga</span>
+            </a>
             <a href="{{ route('posyandu.index') }}" class="nav-item-custom {{ request()->routeIs('posyandu.index') ? 'active' : '' }}">
                 <i class="fa-solid fa-baby"></i>
                 <span>Posyandu Balita</span>

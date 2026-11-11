@@ -145,4 +145,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(KoperasiPinjaman::class, 'id_user');
     }
+
+    public function bankWargaRekening()
+    {
+        return $this->hasOne(BankWargaRekening::class, 'id_user');
+    }
 }

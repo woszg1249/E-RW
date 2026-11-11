@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\BankSampah;
 use App\Models\User;
+use App\Services\BankWargaService;
 use Illuminate\Http\Request;
 
 class BankSampahController extends Controller
@@ -53,20 +54,28 @@ class BankSampahController extends Controller
         $targetUser = User::find($userId);
         $totalHarga = $validated['berat_kg'] * $validated['harga_per_kg'];
 
-        BankSampah::create([
+        $status = auth()->user()->isAdmin() ? 'approved' : 'pending';
+
+        $item = BankSampah::create([
             'id_user' => $userId,
             'nama_warga' => $targetUser->nama ?? auth()->user()->nama,
             'jenis_sampah' => $validated['jenis_sampah'],
             'berat_kg' => $validated['berat_kg'],
             'harga_per_kg' => $validated['harga_per_kg'],
             'total_harga' => $totalHarga,
-            'status' => auth()->user()->isAdmin() ? 'approved' : 'pending',
+            'status' => $status,
             'tanggal_pengumpulan' => now(),
-            'tanggal_diproses' => auth()->user()->isAdmin() ? now() : null,
+            'tanggal_diproses' => ($status === 'approved') ? now() : null,
             'catatan' => $validated['catatan'] ?? null,
         ]);
 
-        return redirect()->route('bank-sampah.index')->with('success', 'Setoran bank sampah berhasil dicatat!');
+        $pesan = 'Setoran bank sampah berhasil dicatat!';
+        if ($status === 'approved') {
+            BankWargaService::transferDariBankSampah($item);
+            $pesan = 'Setoran bank sampah berhasil dicatat & dana Rp ' . number_format($totalHarga, 0, ',', '.') . ' otomatis ditransfer ke Bank Warga!';
+        }
+
+        return redirect()->route('bank-sampah.index')->with('success', $pesan);
     }
 
     public function updateStatus(Request $request, $id)
@@ -81,7 +90,13 @@ class BankSampahController extends Controller
             'tanggal_diproses' => now(),
         ]);
 
-        return redirect()->route('bank-sampah.index')->with('success', 'Status setoran bank sampah diperbarui!');
+        $pesan = 'Status setoran bank sampah diperbarui!';
+        if ($request->status === 'approved') {
+            BankWargaService::transferDariBankSampah($item);
+            $pesan = 'Setoran bank sampah disetujui & dana Rp ' . number_format($item->total_harga, 0, ',', '.') . ' otomatis ditransfer ke Bank Warga!';
+        }
+
+        return redirect()->route('bank-sampah.index')->with('success', $pesan);
     }
 
     public function destroy($id)

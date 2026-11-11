@@ -3,6 +3,7 @@
 use App\Http\Controllers\AsetController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BankSampahController;
+use App\Http\Controllers\BankWargaController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\KegiatanController;
 use App\Http\Controllers\KeuanganController;
@@ -29,6 +30,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middl
 
 // Public IoT Scan Endpoint
 Route::post('/api/iot/koperasi/scan', [KoperasiController::class, 'apiIotScan'])->name('api.iot.koperasi.scan');
+Route::post('/api/iot/bank-warga/tap', [BankWargaController::class, 'apiIotTap'])->name('api.iot.bank_warga.tap');
 
 // Protected Routes (Warga & Admin)
 Route::middleware('auth')->group(function () {
@@ -81,6 +83,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/bank-sampah', [BankSampahController::class, 'store'])->name('bank-sampah.store');
     Route::post('/bank-sampah/{id}/status', [BankSampahController::class, 'updateStatus'])->name('bank-sampah.status')->middleware('admin');
     Route::delete('/bank-sampah/{id}', [BankSampahController::class, 'destroy'])->name('bank-sampah.destroy')->middleware('admin');
+
+    // Bank Lokal Digital Warga RW 19
+    Route::get('/bank-warga', [BankWargaController::class, 'index'])->name('bank-warga.index');
+    Route::post('/bank-warga/topup', [BankWargaController::class, 'topup'])->name('bank-warga.topup');
+    Route::post('/bank-warga/daftar', [BankWargaController::class, 'daftarOtomatis'])->name('bank-warga.daftar');
 
     // UMKM Warga
     Route::get('/umkm', [UmkmController::class, 'index'])->name('umkm.index');

@@ -231,12 +231,27 @@
                             </div>
 
                             <div class="mb-3 text-start">
+                                @php
+                                    $rekWargaItem = \App\Models\BankWargaRekening::where('id_user', $item->id_user)->first();
+                                    $saldoWargaItem = $rekWargaItem ? (float) $rekWargaItem->saldo : 0;
+                                    $cukupSaldo = $saldoWargaItem >= (float) $item->jumlah;
+                                @endphp
                                 <label class="form-label fw-semibold small">Metode Pembayaran</label>
-                                <select name="metode" class="form-select form-select-sm">
-                                    <option value="QRIS Digital">QRIS Digital (GoPay, OVO, ShopeePay, DANA)</option>
+                                <select name="metode" class="form-select form-select-sm" id="metodeBayar{{ $item->id_tagihan }}" onchange="handleMetodeChange(this.value, '{{ $item->id_tagihan }}', {{ $saldoWargaItem }}, {{ (float) $item->jumlah }})">
+                                    <option value="Bank Digital Warga" {{ $cukupSaldo ? 'selected' : '' }}>
+                                        🏦 Bank Digital Warga (Saldo: Rp {{ number_format($saldoWargaItem, 0, ',', '.') }})
+                                    </option>
+                                    <option value="QRIS Digital" {{ !$cukupSaldo ? 'selected' : '' }}>QRIS Digital (GoPay, OVO, ShopeePay, DANA)</option>
                                     <option value="Transfer Bank">Transfer Bank (BCA / Mandiri)</option>
                                     <option value="Tunai / Cash">Tunai ke Pengurus RT</option>
                                 </select>
+                                <div id="infoBankWarga{{ $item->id_tagihan }}" class="mt-2 p-2 rounded small {{ $cukupSaldo ? 'bg-success bg-opacity-10 text-success border border-success border-opacity-25' : 'bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25' }}">
+                                    @if($cukupSaldo)
+                                        <i class="fa-solid fa-circle-check me-1"></i> Saldo Bank Warga mencukupi. Pembayaran akan memotong saldo secara otomatis & lunas seketika.
+                                    @else
+                                        <i class="fa-solid fa-triangle-exclamation me-1"></i> Saldo Bank Warga Rp {{ number_format($saldoWargaItem, 0, ',', '.') }} (Kurang Rp {{ number_format($item->jumlah - $saldoWargaItem, 0, ',', '.') }}). Silakan Top Up atau setor bank sampah terlebih dahulu.
+                                    @endif
+                                </div>
                             </div>
                         </div>
                         <div class="modal-footer border-0 pt-0">
@@ -262,6 +277,16 @@
             div.classList.remove('d-none');
         } else {
             div.classList.add('d-none');
+        }
+    }
+
+    function handleMetodeChange(val, id, saldo, tagihan) {
+        const info = document.getElementById('infoBankWarga' + id);
+        if (!info) return;
+        if (val === 'Bank Digital Warga') {
+            info.classList.remove('d-none');
+        } else {
+            info.classList.add('d-none');
         }
     }
 </script>
