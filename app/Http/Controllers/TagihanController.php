@@ -120,23 +120,27 @@ class TagihanController extends Controller
             'keterangan' => 'nullable|string',
         ]);
 
+        $namaWarga = $tagihan->user->nama ?? (auth()->user()->nama ?? 'Warga');
+        $rtWarga = $tagihan->user->rt ?? (auth()->user()->rt ?? '06');
+
         $tagihan->update([
             'status_bayar' => 'Lunas',
             'tgl_update' => now(),
         ]);
 
         TransaksiPembayaran::create([
-            'id_user' => $tagihan->id_user,
-            'id_tagihan' => $tagihan->id_tagihan,
-            'jumlah_bayar' => $tagihan->jumlah,
-            'metode_pembayaran' => $request->metode,
-            'status' => 'success',
-            'tanggal_bayar' => now(),
             'order_id' => 'INV-' . strtoupper(Str::random(10)),
+            'id_user' => $tagihan->id_user,
+            'nama_warga' => $namaWarga,
+            'jenis_kas' => 'masuk',
+            'keterangan' => "Iuran {$tagihan->bulan_tahun} - {$namaWarga} (RT {$rtWarga}/RW 19)",
+            'jumlah' => (int) $tagihan->jumlah,
+            'id_tagihan' => $tagihan->id_tagihan,
+            'metode' => $request->metode ?? 'QRIS Digital',
+            'status' => 'success',
+            'paid_at' => now(),
+            'created_at' => now(),
         ]);
-
-        $namaWarga = $tagihan->user->nama ?? 'Warga';
-        $rtWarga = $tagihan->user->rt ?? '06';
 
         Keuangan::create([
             'kategori' => 'Iuran Warga',

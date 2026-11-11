@@ -49,7 +49,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/tagihan/{id}/dismiss', [TagihanController::class, 'dismissNotif'])->name('tagihan.dismiss');
 
     // Warga & Kartu Keluarga (KK)
-    Route::get('/warga', [WargaController::class, 'index'])->name('warga.index');
+    Route::get('/warga', [WargaController::class, 'index'])->name('warga.index')->middleware('admin');
     Route::post('/warga', [WargaController::class, 'store'])->name('warga.store')->middleware('admin');
     Route::put('/warga/{id}', [WargaController::class, 'update'])->name('warga.update')->middleware('admin');
     Route::delete('/warga/{id}', [WargaController::class, 'destroy'])->name('warga.destroy')->middleware('admin');

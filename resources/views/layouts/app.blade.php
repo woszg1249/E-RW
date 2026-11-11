@@ -283,13 +283,15 @@
             </a>
 
             <div class="menu-header">Administrasi & Warga</div>
+            @if(auth()->user()->isAdmin())
             <a href="{{ route('warga.index') }}" class="nav-item-custom {{ request()->routeIs('warga.index') ? 'active' : '' }}">
                 <i class="fa-solid fa-users"></i>
                 <span>Daftar Warga</span>
             </a>
+            @endif
             <a href="{{ route('warga.kk') }}" class="nav-item-custom {{ request()->routeIs('warga.kk*') ? 'active' : '' }}">
                 <i class="fa-solid fa-address-card"></i>
-                <span>Kartu Keluarga (KK)</span>
+                <span>{{ auth()->user()->isAdmin() ? 'Kartu Keluarga (KK)' : 'Kartu Keluarga Saya' }}</span>
             </a>
             <a href="{{ route('surat.index') }}" class="nav-item-custom {{ request()->routeIs('surat.index') ? 'active' : '' }}">
                 <i class="fa-solid fa-envelope-open-text"></i>

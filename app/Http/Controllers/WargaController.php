@@ -10,6 +10,11 @@ class WargaController extends Controller
 {
     public function index(Request $request)
     {
+        // Proteksi privasi: Halaman data induk warga hanya untuk Pengurus RT / Admin
+        if (!auth()->user()->isAdmin()) {
+            return redirect()->route('dashboard')->with('error', 'Akses Ditolak! Daftar Induk Warga hanya dapat diakses oleh Pengurus / Admin RT demi privasi data warga.');
+        }
+
         $query = User::query();
 
         if ($request->filled('rt')) {
@@ -137,6 +142,7 @@ class WargaController extends Controller
 
     public function kelolaKK(Request $request)
     {
+        $currentUser = auth()->user();
         $search = $request->search;
         $rt = $request->rt;
 
@@ -145,15 +151,26 @@ class WargaController extends Controller
             ->select('no_kk', 'alamat', 'rt', 'rw')
             ->groupBy('no_kk', 'alamat', 'rt', 'rw');
 
-        if ($rt) {
-            $kkListQuery->where('rt', $rt);
-        }
+        // PROTEKSI PRIVASI: JIKA ROLE WARGA, HANYA BISA MELIHAT KK MILIKNYA SENDIRI
+        if ($currentUser->isWarga()) {
+            if (empty($currentUser->no_kk)) {
+                $families = [];
+                $kkList = $kkListQuery->where('no_kk', '__NO_KK_NOT_FOUND__')->paginate(1);
+                return view('warga.kk', compact('families', 'kkList'));
+            }
+            $kkListQuery->where('no_kk', $currentUser->no_kk);
+        } else {
+            // ADMIN: BISA MELIHAT SEMUA & FILTER
+            if ($rt) {
+                $kkListQuery->where('rt', $rt);
+            }
 
-        if ($search) {
-            $kkListQuery->where(function ($q) use ($search) {
-                $q->where('no_kk', 'like', "%{$search}%")
-                  ->orWhere('alamat', 'like', "%{$search}%");
-            });
+            if ($search) {
+                $kkListQuery->where(function ($q) use ($search) {
+                    $q->where('no_kk', 'like', "%{$search}%")
+                      ->orWhere('alamat', 'like', "%{$search}%");
+                });
+            }
         }
 
         $kkList = $kkListQuery->paginate(12)->withQueryString();
@@ -178,6 +195,13 @@ class WargaController extends Controller
 
     public function cetakKK($no_kk)
     {
+        $currentUser = auth()->user();
+
+        // PROTEKSI PRIVASI: JIKA ROLE WARGA, DILARANG MENCETAK KK MILIK ORANG LAIN
+        if ($currentUser->isWarga() && $currentUser->no_kk !== $no_kk) {
+            abort(403, 'Akses Ditolak! Demi privasi kependudukan, Anda hanya berhak mencetak Kartu Keluarga milik Anda sendiri.');
+        }
+
         $members = User::where('no_kk', $no_kk)->orderBy('status_keluarga', 'asc')->get();
         if ($members->isEmpty()) {
             abort(404, 'Data Kartu Keluarga tidak ditemukan.');
