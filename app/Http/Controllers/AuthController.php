@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -206,6 +208,114 @@ class AuthController extends Controller
         }
 
         return response()->json(['found' => false]);
+    }
+
+    public function showForgotPassword()
+    {
+        if (Auth::check()) {
+            return redirect()->route('dashboard');
+        }
+        return view('auth.forgot-password');
+    }
+
+    public function processForgotPassword(Request $request)
+    {
+        $validated = $request->validate([
+            'identitas' => 'required|string',
+            'nik' => 'required|string',
+            'no_kk' => 'nullable|string',
+        ], [
+            'identitas.required' => 'Masukkan Username, Email, atau NIK akun Anda.',
+            'nik.required' => 'Masukkan NIK untuk verifikasi keamanan akun.',
+        ]);
+
+        $identitas = trim($validated['identitas']);
+        $nik = trim($validated['nik']);
+        $noKk = trim($validated['no_kk'] ?? '');
+
+        // Cari user berdasarkan username, email, atau NIK
+        $user = User::where(function ($q) use ($identitas) {
+            $q->where('username', $identitas)
+                ->orWhere('email', $identitas)
+                ->orWhere('nik', $identitas);
+        })->first();
+
+        if (!$user) {
+            return back()->withErrors([
+                'identitas' => 'Akun dengan username/email/NIK tersebut tidak ditemukan dalam sistem RW 19.',
+            ])->withInput();
+        }
+
+        // Verifikasi NIK
+        if ($user->nik && $user->nik !== $nik) {
+            return back()->withErrors([
+                'nik' => 'Verifikasi gagal: NIK yang Anda masukkan tidak sesuai dengan data terdaftar akun ini.',
+            ])->withInput();
+        }
+
+        // Verifikasi No KK jika diisi
+        if ($noKk && $user->no_kk && $user->no_kk !== $noKk) {
+            return back()->withErrors([
+                'no_kk' => 'Verifikasi gagal: Nomor Kartu Keluarga (KK) tidak sesuai.',
+            ])->withInput();
+        }
+
+        // Buat token reset unik
+        $rawToken = Str::random(60);
+        DB::table('password_reset_tokens')->updateOrInsert(
+            ['email' => $user->email],
+            [
+                'token' => Hash::make($rawToken),
+                'created_at' => now(),
+            ]
+        );
+
+        return redirect()->route('password.reset', [
+            'token' => $rawToken,
+            'email' => $user->email,
+        ])->with('success', "Identitas berhasil diverifikasi untuk akun {$user->nama}. Silakan tentukan password baru Anda.");
+    }
+
+    public function showResetPassword(Request $request, $token)
+    {
+        $email = $request->query('email');
+        return view('auth.reset-password', compact('token', 'email'));
+    }
+
+    public function updatePassword(Request $request)
+    {
+        $request->validate([
+            'token' => 'required|string',
+            'email' => 'required|email|exists:users,email',
+            'password' => 'required|string|min:6|confirmed',
+        ], [
+            'password.min' => 'Password baru minimal 6 karakter.',
+            'password.confirmed' => 'Konfirmasi password baru tidak cocok.',
+        ]);
+
+        $resetRecord = DB::table('password_reset_tokens')->where('email', $request->email)->first();
+
+        if (!$resetRecord) {
+            return redirect()->route('password.request')->withErrors(['email' => 'Permintaan reset password tidak valid atau sudah kedaluwarsa.']);
+        }
+
+        $tokenMatches = Hash::check($request->token, $resetRecord->token) || ($request->token === $resetRecord->token);
+        if (!$tokenMatches) {
+            return back()->withErrors(['token' => 'Token reset password tidak valid atau sudah tidak berlaku.']);
+        }
+
+        if (\Carbon\Carbon::parse($resetRecord->created_at)->addMinutes(60)->isPast()) {
+            DB::table('password_reset_tokens')->where('email', $request->email)->delete();
+            return redirect()->route('password.request')->withErrors(['email' => 'Sesi reset password telah kedaluwarsa (lebih dari 60 menit). Silakan ajukan kembali.']);
+        }
+
+        $user = User::where('email', $request->email)->firstOrFail();
+        $user->password = Hash::make($request->password);
+        $user->save();
+
+        DB::table('password_reset_tokens')->where('email', $request->email)->delete();
+
+        return redirect()->route('login')->with('success', 'Kata sandi berhasil diperbarui! Silakan masuk dengan kata sandi baru Anda.');
     }
 
     public function logout(Request $request)
