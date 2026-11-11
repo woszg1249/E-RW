@@ -143,14 +143,11 @@ class TagihanController extends Controller
         ]);
 
         Keuangan::create([
-            'kategori' => 'Iuran Warga',
-            'deskripsi' => "Iuran {$tagihan->bulan_tahun} - {$namaWarga} (RT {$rtWarga}/RW 19) [{$request->metode}]",
-            'jumlah' => $tagihan->jumlah,
+            'nama_warga' => $namaWarga,
             'jenis' => 'masuk',
+            'keterangan' => "Iuran {$tagihan->bulan_tahun} - {$namaWarga} (RT {$rtWarga}/RW 19) [" . ($request->metode ?? 'QRIS Digital') . "]",
+            'jumlah' => $tagihan->jumlah,
             'tanggal' => now()->toDateString(),
-            'nama_penyetor' => $namaWarga,
-            'status' => 'diterima',
-            'created_at' => now(),
         ]);
 
         return redirect()->route('tagihan.index')->with('success', 'Pembayaran tagihan iuran berhasil dikonfirmasi dan dicatat ke Kas RT!');

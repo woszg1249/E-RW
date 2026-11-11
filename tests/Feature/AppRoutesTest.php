@@ -60,6 +60,25 @@ class AppRoutesTest extends TestCase
         $response->assertRedirect('/dashboard');
     }
 
+    public function test_warga_cannot_access_buku_kas_rt(): void
+    {
+        $warga = User::where('role', 'Warga')->first();
+        if (!$warga) {
+            $this->markTestSkipped('Tidak ada user Warga di database');
+        }
+
+        $this->actingAs($warga);
+
+        $response = $this->get('/keuangan');
+        // Buku Kas RT hanya untuk admin
+        $response->assertRedirect('/dashboard');
+
+        // Namun Laporan Keuangan Bulanan tetap dapat diakses warga untuk transparansi
+        $responseLaporan = $this->get('/keuangan/laporan');
+        $responseLaporan->assertStatus(200);
+        $responseLaporan->assertSee('Laporan Keuangan Bulanan');
+    }
+
     public function test_warga_can_access_own_kk_and_cannot_print_other_kk(): void
     {
         $warga = User::where('role', 'Warga')->whereNotNull('no_kk')->first();

@@ -31,12 +31,12 @@
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
                 <div>
                     <h5 class="fw-bold mb-1">Daftar Mutasi Keuangan Kas RT</h5>
-                    <p class="text-muted small mb-0">Catatan transparansi kas masuk & pengeluaran operasional RT 06</p>
+                    <p class="text-muted small mb-0">Buku pembukuan kas masuk & pengeluaran operasional wilayah RW 19 (RT 06 & RT 07)</p>
                 </div>
 
                 <div class="d-flex gap-2">
                     <a href="{{ route('keuangan.laporan') }}" class="btn btn-outline-secondary rounded-pill px-3">
-                        <i class="fa-solid fa-file-pdf me-1"></i> Cetak Laporan
+                        <i class="fa-solid fa-file-invoice-dollar me-1"></i> Laporan Keuangan Bulanan
                     </a>
                     @if(auth()->user()->isAdmin())
                         <button class="btn btn-primary-custom rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#modalTambahKas">

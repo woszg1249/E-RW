@@ -11,6 +11,11 @@ class KeuanganController extends Controller
 {
     public function index(Request $request)
     {
+        // Proteksi: Buku Kas RT hanya dapat diakses oleh Pengurus RT / Admin
+        if (!auth()->user()->isAdmin()) {
+            return redirect()->route('dashboard')->with('error', 'Akses Ditolak! Buku Kas RT hanya dapat diakses oleh Pengurus / Admin RT demi kerahasiaan pembukuan kas.');
+        }
+
         $query = Keuangan::with('bukti')->orderBy('tanggal', 'desc')->orderBy('id', 'desc');
 
         if ($request->filled('jenis')) {
@@ -97,32 +102,72 @@ class KeuanganController extends Controller
 
     public function laporan(Request $request)
     {
-        $bulan = $request->get('bulan', date('m'));
-        $tahun = $request->get('tahun', date('Y'));
+        $bulan = sprintf('%02d', (int) $request->get('bulan', date('m')));
+        $tahun = (int) $request->get('tahun', date('Y'));
+        $rt = $request->get('rt');
 
         $query = Keuangan::with('bukti')
             ->whereMonth('tanggal', $bulan)
             ->whereYear('tanggal', $tahun)
-            ->orderBy('tanggal', 'asc');
+            ->orderBy('tanggal', 'asc')
+            ->orderBy('id', 'asc');
+
+        if ($request->filled('rt')) {
+            $rtFilter = ltrim($request->rt, '0');
+            $query->where(function($q) use ($rtFilter, $request) {
+                $q->where('keterangan', 'like', "%RT {$request->rt}%")
+                  ->orWhere('keterangan', 'like', "%RT {$rtFilter}%")
+                  ->orWhere('keterangan', 'like', "%RT{$request->rt}%");
+            });
+        }
 
         $dataLaporan = $query->get();
 
+        // 1. Saldo Awal Kas sebelum bulan berjalan (akumulasi bulan-bulan sebelumnya)
+        $startOfMonth = \Carbon\Carbon::createFromDate($tahun, (int)$bulan, 1)->startOfMonth()->toDateString();
+        
+        $saldoAwalQueryMasuk = Keuangan::whereDate('tanggal', '<', $startOfMonth)->where('jenis', 'masuk');
+        $saldoAwalQueryKeluar = Keuangan::whereDate('tanggal', '<', $startOfMonth)->where('jenis', 'keluar');
+        
+        if ($request->filled('rt')) {
+            $rtFilter = ltrim($request->rt, '0');
+            $saldoAwalQueryMasuk->where(function($q) use ($rtFilter, $request) {
+                $q->where('keterangan', 'like', "%RT {$request->rt}%")
+                  ->orWhere('keterangan', 'like', "%RT {$rtFilter}%")
+                  ->orWhere('keterangan', 'like', "%RT{$request->rt}%");
+            });
+            $saldoAwalQueryKeluar->where(function($q) use ($rtFilter, $request) {
+                $q->where('keterangan', 'like', "%RT {$request->rt}%")
+                  ->orWhere('keterangan', 'like', "%RT {$rtFilter}%")
+                  ->orWhere('keterangan', 'like', "%RT{$request->rt}%");
+            });
+        }
+
+        $saldoAwal = ($saldoAwalQueryMasuk->sum('jumlah') ?? 0) - ($saldoAwalQueryKeluar->sum('jumlah') ?? 0);
+
+        // 2. Total Kas Masuk & Kas Keluar Bulan Berjalan
         $totalMasuk = $dataLaporan->where('jenis', 'masuk')->sum('jumlah');
         $totalKeluar = $dataLaporan->where('jenis', 'keluar')->sum('jumlah');
-        $saldoPeriode = $totalMasuk - $totalKeluar;
+        $surplusDefisit = $totalMasuk - $totalKeluar;
 
-        // Total akumulasi saldo keseluruhan
-        $saldoTotal = (Keuangan::where('jenis', 'masuk')->sum('jumlah') ?? 0) -
-                      (Keuangan::where('jenis', 'keluar')->sum('jumlah') ?? 0);
+        // 3. Saldo Akhir Kas per akhir bulan ini
+        $saldoAkhir = $saldoAwal + $surplusDefisit;
+
+        // 4. Saldo Kas Kumulatif Keseluruhan (hingga saat ini)
+        $saldoTotalSaatIni = (Keuangan::where('jenis', 'masuk')->sum('jumlah') ?? 0) -
+                             (Keuangan::where('jenis', 'keluar')->sum('jumlah') ?? 0);
 
         return view('keuangan.laporan', compact(
             'dataLaporan',
             'bulan',
             'tahun',
+            'rt',
+            'saldoAwal',
             'totalMasuk',
             'totalKeluar',
-            'saldoPeriode',
-            'saldoTotal'
+            'surplusDefisit',
+            'saldoAkhir',
+            'saldoTotalSaatIni'
         ));
     }
 }

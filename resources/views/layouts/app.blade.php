@@ -299,10 +299,12 @@
             </a>
 
             <div class="menu-header">Keuangan & Iuran</div>
+            @if(auth()->user()->isAdmin())
             <a href="{{ route('keuangan.index') }}" class="nav-item-custom {{ request()->routeIs('keuangan.index') ? 'active' : '' }}">
                 <i class="fa-solid fa-wallet"></i>
                 <span>Buku Kas RT</span>
             </a>
+            @endif
             <a href="{{ route('tagihan.index') }}" class="nav-item-custom {{ request()->routeIs('tagihan.index') ? 'active' : '' }}">
                 <i class="fa-solid fa-receipt"></i>
                 <span>Tagihan Iuran Warga</span>

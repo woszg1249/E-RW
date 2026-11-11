@@ -36,8 +36,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('home');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // Keuangan Kas RT
-    Route::get('/keuangan', [KeuanganController::class, 'index'])->name('keuangan.index');
+    // Keuangan Kas RT (Khusus Admin / Pengurus RT)
+    Route::get('/keuangan', [KeuanganController::class, 'index'])->name('keuangan.index')->middleware('admin');
     Route::post('/keuangan', [KeuanganController::class, 'store'])->name('keuangan.store')->middleware('admin');
     Route::delete('/keuangan/{id}', [KeuanganController::class, 'destroy'])->name('keuangan.destroy')->middleware('admin');
     Route::get('/keuangan/laporan', [KeuanganController::class, 'laporan'])->name('keuangan.laporan');
