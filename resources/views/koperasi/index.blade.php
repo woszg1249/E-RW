@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Koperasi Warga & IoT')
-@section('page_title', 'Koperasi Simpan Pinjam RT 06')
+@section('page_title', 'Koperasi Simpan Pinjam RW 19 (RT 06 & RT 07)')
 
 @section('content')
 <div class="row g-4">
@@ -108,8 +108,19 @@
                                             <div class="col-6 fw-bold">Rp {{ number_format($pinjamanAktif->jumlah, 0, ',', '.') }}</div>
                                             <div class="col-6 text-muted">Tenor:</div>
                                             <div class="col-6 fw-bold">{{ $pinjamanAktif->tenor }} Bulan (Bunga {{ $pinjamanAktif->bunga }}%)</div>
+                                            <div class="col-6 text-muted">Status:</div>
+                                            <div class="col-6">
+                                                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill px-2 py-1 small">
+                                                    <i class="fa-solid fa-bolt me-1"></i> Aktif (IoT e-KTP)
+                                                </span>
+                                            </div>
                                             <div class="col-6 text-muted">Sisa Pinjaman:</div>
                                             <div class="col-6 fw-bold text-danger fs-6">Rp {{ number_format($pinjamanAktif->sisa_pinjaman, 0, ',', '.') }}</div>
+                                        </div>
+                                        <div class="mt-3 pt-2 border-top">
+                                            <a href="{{ route('tagihan.index') }}" class="btn btn-sm btn-outline-success rounded-pill w-100">
+                                                <i class="fa-solid fa-receipt me-1"></i> Cek & Bayar Cicilan di Tagihan Iuran
+                                            </a>
                                         </div>
                                     @else
                                         <p class="text-muted small mb-0">Anda saat ini tidak memiliki pinjaman aktif.</p>
@@ -161,12 +172,43 @@
                 <div class="tab-pane fade" id="tab-pinjam" role="tabpanel">
                     <div class="row g-4">
                         <div class="col-lg-6">
-                            <h6 class="fw-bold text-dark mb-3">Formulir Pengajuan Pinjaman Modal Warga</h6>
+                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                <h6 class="fw-bold text-dark mb-0">Pinjaman Modal Mandiri Warga (IoT e-KTP)</h6>
+                                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill px-3 py-1 small fw-bold">
+                                    <i class="fa-solid fa-bolt me-1"></i> Instan Otomatis (Tanpa Tunggu RT/RW)
+                                </span>
+                            </div>
+
+                            <div class="alert alert-success bg-opacity-10 border border-success border-opacity-25 rounded-4 p-3 small mb-3">
+                                <div class="d-flex gap-2">
+                                    <i class="fa-solid fa-microchip text-success fs-5 mt-1"></i>
+                                    <div>
+                                        <strong class="text-success">Layanan Pinjaman Otomatis IoT:</strong>
+                                        <p class="mb-0 text-dark">
+                                            Warga tidak perlu lagi menunggu konfirmasi persetujuan dari RT/RW. Cukup tap atau verifikasi <strong>e-KTP</strong> Anda, pinjaman akan <strong>otomatis langsung disetujui</strong> dan nominal angsuran per bulan langsung masuk ke <strong>Tagihan Iuran Warga</strong> sebagai pengingat tagihan.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
                             <form action="{{ route('koperasi.pinjaman') }}" method="POST">
                                 @csrf
+                                <div class="p-3 bg-light rounded-3 border mb-3">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div class="small">
+                                            <span class="text-muted d-block">Identitas e-KTP Terhubung:</span>
+                                            <strong class="text-dark">{{ auth()->user()->nama }} (NIK: {{ auth()->user()->nik ?? '-' }})</strong>
+                                        </div>
+                                        <span class="badge bg-primary rounded-pill px-3 py-1 small">
+                                            <i class="fa-solid fa-id-card me-1"></i> e-KTP Siap Tap
+                                        </span>
+                                    </div>
+                                    <input type="hidden" name="rfid_uid" value="{{ auth()->user()->rfid_uid ?: ('E28011700' . substr(strval(auth()->user()->nik ?: '1234567890'), -6)) }}">
+                                </div>
+
                                 <div class="mb-3">
                                     <label class="form-label fw-semibold small">Jumlah Pinjaman (Rp)</label>
-                                    <input type="number" name="jumlah" id="simulasiJumlah" class="form-control" value="1000000" min="100000" step="100000" oninput="updateSimulasi()" required>
+                                    <input type="number" name="jumlah" id="simulasiJumlah" class="form-control form-control-lg fw-bold text-primary" value="1000000" min="100000" step="100000" oninput="updateSimulasi()" required>
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label fw-semibold small">Jangka Waktu (Tenor)</label>
@@ -179,27 +221,37 @@
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label fw-semibold small">Keperluan / Keterangan Pinjaman</label>
-                                    <textarea name="keterangan" rows="3" class="form-control" placeholder="Contoh: Tambahan modal usaha warung sembako" required></textarea>
+                                    <textarea name="keterangan" rows="2" class="form-control" placeholder="Contoh: Tambahan modal usaha warung sembako" required>Pinjaman modal usaha mandiri</textarea>
                                 </div>
-                                <button type="submit" class="btn btn-primary-custom rounded-pill px-4">
-                                    <i class="fa-solid fa-paper-plane me-1"></i> Ajukan Pinjaman Sekarang
+                                <button type="submit" class="btn btn-primary-custom rounded-pill px-4 py-2 w-100 fw-bold">
+                                    <i class="fa-solid fa-wifi me-2"></i> Tap e-KTP & Pinjam Otomatis (Instan Disetujui)
                                 </button>
                             </form>
                         </div>
 
                         <div class="col-lg-6">
-                            <div class="p-4 bg-light rounded-4 border">
-                                <h6 class="fw-bold text-dark mb-3">Kalkulator Simulasi Angsuran</h6>
-                                <div class="row g-3 small">
-                                    <div class="col-6 text-muted">Pokok Pinjaman:</div>
-                                    <div class="col-6 fw-bold text-dark" id="txtPokok">Rp 1.000.000</div>
-                                    <div class="col-6 text-muted">Bunga Koperasi:</div>
-                                    <div class="col-6 fw-bold text-primary">1.5% Flat / Bulan</div>
-                                    <div class="col-6 text-muted">Total Pengembalian:</div>
-                                    <div class="col-6 fw-bold text-dark" id="txtTotal">Rp 1.180.000</div>
-                                    <div class="col-12"><hr class="my-1"></div>
-                                    <div class="col-6 fw-bold fs-6">Cicilan per Bulan:</div>
-                                    <div class="col-6 fw-bold text-success fs-5" id="txtCicilan">Rp 98.333</div>
+                            <div class="p-4 bg-light rounded-4 border h-100 d-flex flex-column justify-content-between">
+                                <div>
+                                    <h6 class="fw-bold text-dark mb-3">Kalkulator Simulasi Angsuran</h6>
+                                    <div class="row g-3 small">
+                                        <div class="col-6 text-muted">Pokok Pinjaman:</div>
+                                        <div class="col-6 fw-bold text-dark" id="txtPokok">Rp 1.000.000</div>
+                                        <div class="col-6 text-muted">Bunga Koperasi:</div>
+                                        <div class="col-6 fw-bold text-primary">1.5% Flat / Bulan</div>
+                                        <div class="col-6 text-muted">Total Pengembalian:</div>
+                                        <div class="col-6 fw-bold text-dark" id="txtTotal">Rp 1.180.000</div>
+                                        <div class="col-12"><hr class="my-1"></div>
+                                        <div class="col-6 fw-bold fs-6">Cicilan per Bulan:</div>
+                                        <div class="col-6 fw-bold text-success fs-5" id="txtCicilan">Rp 98.333</div>
+                                    </div>
+                                </div>
+
+                                <div class="alert alert-warning border-0 rounded-3 p-3 small mt-4 mb-0">
+                                    <i class="fa-solid fa-bell text-warning me-2"></i>
+                                    <strong>Pengingat Tagihan Otomatis:</strong>
+                                    <p class="mb-0 mt-1 text-muted">
+                                        Setelah tombol di atas ditekan, cicilan sebesar <strong class="text-dark" id="txtCicilanNotif">Rp 98.333</strong> akan otomatis tercatat di menu <strong>Tagihan Iuran Warga</strong> sebagai kewajiban angsuran bulanan yang dapat dibayar secara langsung.
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -396,6 +448,10 @@
         document.getElementById('txtPokok').innerText = 'Rp ' + jumlah.toLocaleString('id-ID');
         document.getElementById('txtTotal').innerText = 'Rp ' + Math.round(total).toLocaleString('id-ID');
         document.getElementById('txtCicilan').innerText = 'Rp ' + Math.round(cicilan).toLocaleString('id-ID');
+        const notifElem = document.getElementById('txtCicilanNotif');
+        if (notifElem) {
+            notifElem.innerText = 'Rp ' + Math.round(cicilan).toLocaleString('id-ID');
+        }
     }
 </script>
 @endsection

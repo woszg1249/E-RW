@@ -86,7 +86,7 @@ return new class extends Migration
             Schema::create('tagihan', function (Blueprint $table) {
                 $table->increments('id_tagihan');
                 $table->integer('id_user');
-                $table->string('bulan_tahun', 50)->nullable();
+                $table->string('bulan_tahun', 100)->nullable();
                 $table->date('tanggal_tagihan')->nullable();
                 $table->integer('jumlah');
                 $table->string('status_bayar', 20)->nullable();

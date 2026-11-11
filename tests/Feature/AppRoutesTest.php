@@ -154,4 +154,55 @@ class AppRoutesTest extends TestCase
             'status' => 'success',
         ]);
     }
+
+    public function test_pinjaman_koperasi_otomatis_disetujui_dan_terbit_ke_tagihan(): void
+    {
+        $warga = User::where('role', 'Warga')->first();
+        if (!$warga) {
+            $this->markTestSkipped('Tidak ada user Warga di database');
+        }
+
+        $this->actingAs($warga);
+
+        $response = $this->post('/koperasi/pinjaman', [
+            'jumlah' => 1000000,
+            'tenor' => 12,
+            'keterangan' => 'Pinjaman modal usaha mandiri',
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+
+        // Pastikan pinjaman berstatus 'disetujui' (bukan pending)
+        $this->assertDatabaseHas('koperasi_pinjaman', [
+            'id_user' => $warga->id,
+            'jumlah' => 1000000,
+            'tenor' => 12,
+            'status' => 'disetujui',
+        ]);
+
+        // Pastikan otomatis terbit tagihan cicilan di tabel tagihan dengan status 'Belum Lunas'
+        $tagihanKoperasi = \App\Models\Tagihan::where('id_user', $warga->id)
+            ->where('status_bayar', 'Belum Lunas')
+            ->where('bulan_tahun', 'like', '%Koperasi%')
+            ->latest('id_tagihan')
+            ->first();
+
+        $this->assertNotNull($tagihanKoperasi);
+
+        // Simulasi warga membayar tagihan cicilan koperasi via menu Tagihan
+        $responseBayar = $this->post('/tagihan/' . $tagihanKoperasi->id_tagihan . '/bayar', [
+            'metode' => 'QRIS Digital',
+            'keterangan' => 'Bayar cicilan pertama koperasi',
+        ]);
+
+        $responseBayar->assertRedirect();
+
+        // Pastikan tagihan lunas dan tercatat di cicilan koperasi
+        $this->assertEquals('Lunas', $tagihanKoperasi->fresh()->status_bayar);
+        $this->assertDatabaseHas('koperasi_cicilan', [
+            'id_pinjaman' => $pinjaman->id ?? \App\Models\KoperasiPinjaman::where('id_user', $warga->id)->latest('id')->value('id'),
+            'jumlah' => $tagihanKoperasi->jumlah,
+        ]);
+    }
 }

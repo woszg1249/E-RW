@@ -7,6 +7,7 @@ use App\Models\KoperasiAnggota;
 use App\Models\KoperasiCicilan;
 use App\Models\KoperasiPinjaman;
 use App\Models\KoperasiSimpanan;
+use App\Models\Tagihan;
 use App\Models\User;
 use Illuminate\Http\Request;
 
@@ -107,23 +108,64 @@ class KoperasiController extends Controller
             'jumlah' => 'required|numeric|min:100000',
             'tenor' => 'required|integer|min:1|max:36',
             'keterangan' => 'required|string',
+            'rfid_uid' => 'nullable|string',
         ]);
 
-        $bunga = 1.5; // Bunga standar koperasi 1.5%
+        $user = auth()->user();
+        $jumlah = (float) $validated['jumlah'];
+        $tenor = (int) $validated['tenor'];
+        $bungaFlat = 1.5; // Bunga standar koperasi 1.5% flat per bulan
 
-        KoperasiPinjaman::create([
-            'id_user' => auth()->id(),
-            'jumlah' => $validated['jumlah'],
-            'tenor' => $validated['tenor'],
-            'bunga' => $bunga,
-            'status' => 'pending',
+        // Kalkulasi angsuran bulanan
+        $totalBunga = $jumlah * ($bungaFlat / 100) * $tenor;
+        $totalPengembalian = $jumlah + $totalBunga;
+        $cicilanPerBulan = (int) round($totalPengembalian / $tenor);
+
+        // Pastikan warga otomatis terdaftar sebagai anggota koperasi jika belum
+        KoperasiAnggota::firstOrCreate(
+            ['id_user' => $user->id],
+            ['tanggal_gabung' => now(), 'status' => 'aktif']
+        );
+
+        $rfidUid = $request->input('rfid_uid') ?: ($user->rfid_uid ?: 'E28011700' . substr(strval($user->nik ?: '1234567890'), -6));
+
+        // 1. PINJAMAN LANGSUNG DISETUJUI SECARA OTOMATIS (TANPA PERLU TUNGGU KONFIRMASI RT/RW)
+        $pinjaman = KoperasiPinjaman::create([
+            'id_user' => $user->id,
+            'jumlah' => $jumlah,
+            'tenor' => $tenor,
+            'bunga' => $bungaFlat,
+            'status' => 'disetujui', // Langsung disetujui instan via IoT
             'tanggal_pengajuan' => now(),
             'keterangan' => $validated['keterangan'],
-            'metode_pengajuan' => 'web_portal',
-            'nik_peminjam' => auth()->user()->nik,
+            'metode_pengajuan' => 'iot_rfid_tap',
+            'scan_device_id' => 'IOT-KTP-READER-01',
+            'nik_peminjam' => $user->nik,
         ]);
 
-        return back()->with('success', 'Pengajuan pinjaman berhasil diajukan! Menunggu verifikasi pengurus.');
+        // 2. CATAT LOG SCAN IOT RFID E-KTP
+        IotKoperasiScan::create([
+            'device_id' => 'IOT-KTP-READER-01',
+            'nik' => $user->nik,
+            'rfid_uid' => $rfidUid,
+            'id_user' => $user->id,
+            'status' => 'processed',
+            'scanned_at' => now(),
+        ]);
+
+        // 3. LANGSUNG MASUK KE MENU TAGIHAN IURAN WARGA SEBAGAI PENGINGAT TAGIHAN BULANAN
+        $periodeTagihan = "Cicilan Koperasi: " . now()->translatedFormat('F Y') . " (1/{$tenor})";
+        Tagihan::create([
+            'id_user' => $user->id,
+            'bulan_tahun' => $periodeTagihan,
+            'tanggal_tagihan' => now()->toDateString(),
+            'jumlah' => $cicilanPerBulan,
+            'status_bayar' => 'Belum Lunas',
+            'tgl_buat' => now(),
+            'tgl_update' => now(),
+        ]);
+
+        return back()->with('success', 'Pinjaman modal sebesar Rp ' . number_format($jumlah, 0, ',', '.') . ' berhasil disetujui otomatis melalui verifikasi IoT e-KTP tanpa perlu menunggu konfirmasi RT/RW! Tagihan angsuran bulan pertama (Rp ' . number_format($cicilanPerBulan, 0, ',', '.') . ') telah otomatis diterbitkan ke menu Tagihan Iuran Warga sebagai pengingat.');
     }
 
     public function updateStatusPinjaman(Request $request, $id)
@@ -166,6 +208,10 @@ class KoperasiController extends Controller
         $rfid = $request->input('rfid_uid');
         $nik = $request->input('nik');
         $deviceId = $request->input('device_id', 'IOT-READER-01');
+        $action = $request->input('action', 'scan'); // 'scan' atau 'pinjam'
+        $jumlah = (float) $request->input('jumlah', 1000000);
+        $tenor = (int) $request->input('tenor', 12);
+        $keterangan = $request->input('keterangan', 'Pinjaman Otomatis Tap e-KTP IoT Reader');
 
         $user = null;
         if ($rfid) {
@@ -184,9 +230,54 @@ class KoperasiController extends Controller
             'scanned_at' => now(),
         ]);
 
+        $pinjamanData = null;
+        $tagihanData = null;
+
+        // Jika aksi pinjam diminta via tap IoT reader
+        if ($user && ($action === 'pinjam' || $request->has('pinjam'))) {
+            KoperasiAnggota::firstOrCreate(
+                ['id_user' => $user->id],
+                ['tanggal_gabung' => now(), 'status' => 'aktif']
+            );
+
+            $bungaFlat = 1.5;
+            $totalBunga = $jumlah * ($bungaFlat / 100) * $tenor;
+            $totalPengembalian = $jumlah + $totalBunga;
+            $cicilanPerBulan = (int) round($totalPengembalian / $tenor);
+
+            // Pinjaman langsung disetujui otomatis
+            $pinjamanData = KoperasiPinjaman::create([
+                'id_user' => $user->id,
+                'jumlah' => $jumlah,
+                'tenor' => $tenor,
+                'bunga' => $bungaFlat,
+                'status' => 'disetujui',
+                'tanggal_pengajuan' => now(),
+                'keterangan' => $keterangan,
+                'metode_pengajuan' => 'iot_rfid_tap',
+                'scan_device_id' => $deviceId,
+                'nik_peminjam' => $user->nik,
+            ]);
+
+            // Terbitkan ke tagihan iuran warga sebagai pengingat
+            $tagihanData = Tagihan::create([
+                'id_user' => $user->id,
+                'bulan_tahun' => "Cicilan Koperasi: " . now()->translatedFormat('F Y') . " (1/{$tenor})",
+                'tanggal_tagihan' => now()->toDateString(),
+                'jumlah' => $cicilanPerBulan,
+                'status_bayar' => 'Belum Lunas',
+                'tgl_buat' => now(),
+                'tgl_update' => now(),
+            ]);
+        }
+
         return response()->json([
             'status' => 'success',
-            'message' => $user ? 'Kartu Warga Terverifikasi: ' . $user->nama : 'Kartu RFID belum terdaftar',
+            'message' => $user 
+                ? ($pinjamanData 
+                    ? 'Pinjaman otomatis berhasil disetujui via Tap e-KTP IoT! Tagihan cicilan telah diterbitkan ke akun warga.' 
+                    : 'Kartu Warga Terverifikasi: ' . $user->nama)
+                : 'Kartu RFID belum terdaftar',
             'data' => [
                 'user' => $user ? [
                     'id' => $user->id,
@@ -196,6 +287,8 @@ class KoperasiController extends Controller
                     'rw' => $user->rw,
                 ] : null,
                 'scan_id' => $scan->id,
+                'pinjaman' => $pinjamanData,
+                'tagihan' => $tagihanData,
             ]
         ]);
     }

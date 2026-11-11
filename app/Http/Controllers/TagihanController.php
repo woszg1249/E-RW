@@ -150,7 +150,27 @@ class TagihanController extends Controller
             'tanggal' => now()->toDateString(),
         ]);
 
-        return redirect()->route('tagihan.index')->with('success', 'Pembayaran tagihan iuran berhasil dikonfirmasi dan dicatat ke Kas RT!');
+        // Jika tagihan adalah cicilan pinjaman koperasi, otomatis sinkronkan ke angsuran Koperasi
+        if (str_contains(strtolower($tagihan->bulan_tahun), 'koperasi')) {
+            $pinjamanAktif = \App\Models\KoperasiPinjaman::where('id_user', $tagihan->id_user)
+                ->where('status', 'disetujui')
+                ->latest('id')
+                ->first();
+            if ($pinjamanAktif) {
+                \App\Models\KoperasiCicilan::create([
+                    'id_pinjaman' => $pinjamanAktif->id,
+                    'jumlah' => $tagihan->jumlah,
+                    'tanggal' => now(),
+                    'catatan' => 'Pembayaran Tagihan Online: ' . $tagihan->bulan_tahun,
+                ]);
+
+                if ($pinjamanAktif->fresh()->sisa_pinjaman <= 0) {
+                    $pinjamanAktif->update(['status' => 'lunas']);
+                }
+            }
+        }
+
+        return redirect()->route('tagihan.index')->with('success', 'Pembayaran tagihan berhasil dikonfirmasi dan dicatat ke Kas RT!');
     }
 
     public function dismissNotif()
