@@ -29,11 +29,27 @@ class AuthController extends Controller
 
         $remember = $request->boolean('remember');
 
-        if (Auth::attempt([$fieldType => $loginInput, 'password' => $credentials['password']], $remember)) {
-            $request->session()->regenerate();
-            $user = Auth::user();
-            return redirect()->intended(route('dashboard'))
-                ->with('success', 'Selamat datang kembali, ' . $user->nama . '!');
+        $user = User::where($fieldType, $loginInput)->first();
+
+        if ($user) {
+            $passwordValid = false;
+
+            // Cek apakah password tersimpan dalam bentuk hash bcrypt
+            if (str_starts_with($user->password, '$2y$') || str_starts_with($user->password, '$2a$')) {
+                $passwordValid = Hash::check($credentials['password'], $user->password);
+            } elseif ($user->password === $credentials['password']) {
+                // Mendukung password lama yang belum di-hash, lalu otomatis upgrade ke bcrypt
+                $user->password = Hash::make($credentials['password']);
+                $user->save();
+                $passwordValid = true;
+            }
+
+            if ($passwordValid) {
+                Auth::login($user, $remember);
+                $request->session()->regenerate();
+                return redirect()->intended(route('dashboard'))
+                    ->with('success', 'Selamat datang kembali, ' . $user->nama . '!');
+            }
         }
 
         return back()->withErrors([
