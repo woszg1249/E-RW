@@ -22,10 +22,13 @@
         </button>
     </div>
 
-    <div class="kop-surat">
-        <h4 class="fw-bold mb-0 text-uppercase">POS PELAYANAN TERPADU (POSYANDU) MELATI</h4>
-        <h5 class="fw-bold mb-0">RUKUN TETANGGA 06 / RUKUN WARGA 19</h5>
-        <p class="mb-0 small text-muted">Kelurahan Bekasi Jaya, Kecamatan Bekasi Timur, Kota Bekasi</p>
+    <div class="kop-surat d-flex align-items-center justify-content-center gap-3">
+        <img src="{{ asset('img/logo_ert_rw.svg') }}" alt="Logo RT RW" style="width: 55px; height: 55px;">
+        <div>
+            <h4 class="fw-bold mb-0 text-uppercase">POS PELAYANAN TERPADU (POSYANDU) MELATI</h4>
+            <h5 class="fw-bold mb-0">RUKUN TETANGGA 06 / RUKUN WARGA 19</h5>
+            <p class="mb-0 small text-muted">Kelurahan Bekasi Jaya, Kecamatan Bekasi Timur, Kota Bekasi</p>
+        </div>
     </div>
 
     <div class="text-center mb-3">

@@ -74,7 +74,7 @@
 
     <div class="login-card">
         <div class="text-center mb-4">
-            <img src="{{ asset('img/logo_bekasi.png') }}" alt="Logo RT RW" class="brand-icon" onerror="this.src='https://ui-avatars.com/api/?name=RT&background=059669&color=fff'">
+            <img src="{{ asset('img/logo_ert_rw.svg') }}" alt="Logo RT RW" class="brand-icon">
             <h4 class="fw-bold text-dark mb-1">E-RT RW Bersatu</h4>
             <p class="text-muted small">Sistem Informasi Manajemen RT 06 / RW 19</p>
         </div>

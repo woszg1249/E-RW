@@ -56,10 +56,13 @@
     <div class="col-12">
         <div class="card-custom p-4 p-md-5 bg-white">
             <!-- Kop Surat Resmi RT/RW -->
-            <div class="text-center pb-3 mb-4 border-bottom border-2 border-dark">
-                <h4 class="fw-bold mb-0 text-uppercase tracking-wide">RUKUN TETANGGA 06 / RUKUN WARGA 19</h4>
-                <h5 class="fw-bold mb-1 text-uppercase">KELURAHAN BEKASI JAYA - KECAMATAN BEKASI TIMUR</h5>
-                <p class="mb-0 small text-secondary">Sekretariat: Jl. Melati Raya No. 12, RW 19, Bekasi Jaya, Kota Bekasi • Telp: 0812-3456-7890</p>
+            <div class="d-flex align-items-center justify-content-center gap-4 pb-3 mb-4 border-bottom border-2 border-dark text-center">
+                <img src="{{ asset('img/logo_ert_rw.svg') }}" alt="Logo RT RW" style="width: 70px; height: 70px;">
+                <div>
+                    <h4 class="fw-bold mb-0 text-uppercase tracking-wide">RUKUN TETANGGA 06 / RUKUN WARGA 19</h4>
+                    <h5 class="fw-bold mb-1 text-uppercase">KELURAHAN BEKASI JAYA - KECAMATAN BEKASI TIMUR</h5>
+                    <p class="mb-0 small text-secondary">Sekretariat: Jl. Melati Raya No. 12, RW 19, Bekasi Jaya, Kota Bekasi • Telp: 0812-3456-7890</p>
+                </div>
             </div>
 
             <div class="text-center mb-4">

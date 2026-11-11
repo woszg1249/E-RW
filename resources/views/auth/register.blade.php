@@ -58,6 +58,7 @@
 
     <div class="register-card">
         <div class="text-center mb-4">
+            <img src="{{ asset('img/logo_ert_rw.svg') }}" alt="Logo RT RW" style="width: 56px; height: 56px;" class="mb-2">
             <h4 class="fw-bold text-dark mb-1">Pendaftaran Akun Warga Baru</h4>
             <p class="text-muted small">Lengkapi formulir di bawah ini untuk terdaftar dalam sistem E-RT RW Digital</p>
         </div>

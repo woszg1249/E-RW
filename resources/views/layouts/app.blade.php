@@ -39,15 +39,37 @@
         /* Sidebar Styling */
         #sidebar {
             width: var(--sidebar-width);
-            min-height: 100vh;
+            height: 100vh;
+            max-height: 100vh;
             background: #ffffff;
             border-right: 1px solid #e2e8f0;
             position: fixed;
             top: 0;
+            bottom: 0;
             left: 0;
             z-index: 1040;
             transition: all 0.3s ease;
             overflow-y: auto;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #sidebar::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        #sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        #sidebar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        #sidebar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
         }
 
         #sidebar.collapsed {
@@ -60,11 +82,15 @@
             align-items: center;
             gap: 12px;
             border-bottom: 1px solid #f1f5f9;
+            position: sticky;
+            top: 0;
+            background: #ffffff;
+            z-index: 10;
         }
 
         .sidebar-brand img {
-            width: 40px;
-            height: 40px;
+            width: 42px;
+            height: 42px;
             object-fit: contain;
         }
 
@@ -83,7 +109,8 @@
         }
 
         .sidebar-menu {
-            padding: 16px 12px;
+            padding: 16px 12px 100px 12px;
+            flex: 1;
         }
 
         .menu-header {
@@ -241,7 +268,7 @@
     <!-- Sidebar -->
     <nav id="sidebar">
         <div class="sidebar-brand">
-            <img src="{{ asset('img/logo_bekasi.png') }}" alt="Logo Bekasi" onerror="this.src='https://ui-avatars.com/api/?name=RT&background=059669&color=fff'">
+            <img src="{{ asset('img/logo_ert_rw.svg') }}" alt="Logo RT RW Digital">
             <div>
                 <h6>RT RW DIGITAL</h6>
                 <span>RW 19 • RT 06 Bersatu</span>

@@ -85,11 +85,14 @@
 
     <div class="surat-container">
         <!-- Kop Surat -->
-        <div class="kop-surat">
-            <h4>RUKUN TETANGGA 06 / RUKUN WARGA 19</h4>
-            <h5>KELURAHAN BEKASI JAYA - KECAMATAN BEKASI TIMUR</h5>
-            <h5>KOTA BEKASI - JAWA BARAT</h5>
-            <p>Sekretariat: Jl. Melati Raya Blok C No. 12, RW 19, Bekasi Jaya, Kota Bekasi 17113</p>
+        <div class="kop-surat d-flex align-items-center justify-content-center gap-3">
+            <img src="{{ asset('img/logo_ert_rw.svg') }}" alt="Logo RT RW" style="width: 65px; height: 65px;">
+            <div>
+                <h4>RUKUN TETANGGA 06 / RUKUN WARGA 19</h4>
+                <h5>KELURAHAN BEKASI JAYA - KECAMATAN BEKASI TIMUR</h5>
+                <h5>KOTA BEKASI - JAWA BARAT</h5>
+                <p>Sekretariat: Jl. Melati Raya Blok C No. 12, RW 19, Bekasi Jaya, Kota Bekasi 17113</p>
+            </div>
         </div>
 
         <!-- Judul Surat -->
