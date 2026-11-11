@@ -60,7 +60,7 @@
         <div class="text-center mb-4">
             <img src="{{ asset('img/logo_ert_rw.svg') }}" alt="Logo RT RW" style="width: 56px; height: 56px;" class="mb-2">
             <h4 class="fw-bold text-dark mb-1">Pendaftaran Akun Warga Baru</h4>
-            <p class="text-muted small">Lengkapi formulir di bawah ini untuk terdaftar dalam sistem E-RT RW Digital</p>
+            <p class="text-muted small">Lengkapi formulir di bawah ini untuk terdaftar dalam sistem E-RT RW Digital RW 19</p>
         </div>
 
         @if($errors->any())
@@ -82,12 +82,14 @@
                 </div>
                 <div class="col-md-6">
                     <label class="form-label fw-semibold small text-secondary">Nomor Induk Kependudukan (NIK)</label>
-                    <input type="text" name="nik" class="form-control" placeholder="16 digit NIK" value="{{ old('nik') }}">
+                    <input type="text" name="nik" id="reg_nik" class="form-control" placeholder="16 digit NIK" value="{{ old('nik') }}" maxlength="16">
+                    <div id="nik_feedback" class="small mt-1 d-none"></div>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold small text-secondary">Nomor Kartu Keluarga (KK)</label>
-                    <input type="text" name="no_kk" class="form-control" placeholder="16 digit No KK" value="{{ old('no_kk') }}">
+                    <input type="text" name="no_kk" id="reg_kk" class="form-control" placeholder="16 digit No KK" value="{{ old('no_kk') }}" maxlength="16">
+                    <div id="kk_feedback" class="small mt-1 d-none"></div>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label fw-semibold small text-secondary">Jenis Kelamin <span class="text-danger">*</span></label>
@@ -120,17 +122,20 @@
                     <input type="text" name="no_hp" class="form-control" placeholder="08xxxxxxxxxx" value="{{ old('no_hp') }}">
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label fw-semibold small text-secondary">RT</label>
-                    <input type="text" name="rt" class="form-control" value="{{ old('rt', '06') }}">
+                    <label class="form-label fw-semibold small text-secondary">Wilayah RT <span class="text-danger">*</span></label>
+                    <select name="rt" id="reg_rt" class="form-select" required>
+                        <option value="06" {{ old('rt') == '06' ? 'selected' : '' }}>RT 06 (Ketua: Dimas)</option>
+                        <option value="07" {{ old('rt') == '07' ? 'selected' : '' }}>RT 07 (Ketua: Bambang)</option>
+                    </select>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label fw-semibold small text-secondary">RW</label>
-                    <input type="text" name="rw" class="form-control" value="{{ old('rw', '19') }}">
+                    <label class="form-label fw-semibold small text-secondary">Wilayah RW</label>
+                    <input type="text" name="rw" id="reg_rw" class="form-control" value="19" readonly>
                 </div>
 
                 <div class="col-12">
                     <label class="form-label fw-semibold small text-secondary">Alamat Domisili Lengkap</label>
-                    <textarea name="alamat" rows="2" class="form-control" placeholder="Nama jalan, nomor rumah, gang, dll">{{ old('alamat') }}</textarea>
+                    <textarea name="alamat" id="reg_alamat" rows="2" class="form-control" placeholder="Nama jalan, nomor rumah, gang, dll">{{ old('alamat') }}</textarea>
                 </div>
             </div>
 
@@ -147,5 +152,70 @@
         </form>
     </div>
 
+    <script>
+        // Cek NIK Realtime
+        const nikInput = document.getElementById('reg_nik');
+        const nikFeedback = document.getElementById('nik_feedback');
+        let nikTimeout;
+
+        nikInput.addEventListener('input', function() {
+            clearTimeout(nikTimeout);
+            const val = this.value.trim();
+            if (val.length >= 12) {
+                nikTimeout = setTimeout(() => {
+                    fetch(`{{ route('ajax.check.nik') }}?nik=${val}`)
+                        .then(res => res.json())
+                        .then(data => {
+                            nikFeedback.classList.remove('d-none');
+                            if (data.exists) {
+                                nikFeedback.className = 'small mt-1 text-danger fw-semibold';
+                                nikFeedback.innerHTML = `<i class="fa-solid fa-circle-exclamation me-1"></i> ${data.message}`;
+                            } else {
+                                nikFeedback.className = 'small mt-1 text-success fw-semibold';
+                                nikFeedback.innerHTML = `<i class="fa-solid fa-circle-check me-1"></i> NIK valid & belum terdaftar.`;
+                            }
+                        });
+                }, 400);
+            } else {
+                nikFeedback.classList.add('d-none');
+            }
+        });
+
+        // Deteksi Kartu Keluarga Realtime & Auto-fill Alamat/RT
+        const kkInput = document.getElementById('reg_kk');
+        const kkFeedback = document.getElementById('kk_feedback');
+        const alamatInput = document.getElementById('reg_alamat');
+        const rtSelect = document.getElementById('reg_rt');
+        let kkTimeout;
+
+        kkInput.addEventListener('input', function() {
+            clearTimeout(kkTimeout);
+            const val = this.value.trim();
+            if (val.length >= 12) {
+                kkTimeout = setTimeout(() => {
+                    fetch(`{{ route('ajax.check.kk') }}?no_kk=${val}`)
+                        .then(res => res.json())
+                        .then(data => {
+                            kkFeedback.classList.remove('d-none');
+                            if (data.found) {
+                                kkFeedback.className = 'small mt-1 text-primary fw-semibold';
+                                kkFeedback.innerHTML = `<i class="fa-solid fa-users me-1"></i> KK terdaftar atas nama: <strong>${data.kepala_keluarga}</strong> (${data.total_anggota} anggota). Alamat & RT otomatis diisi.`;
+                                if (!alamatInput.value && data.alamat) {
+                                    alamatInput.value = data.alamat;
+                                }
+                                if (data.rt) {
+                                    rtSelect.value = data.rt;
+                                }
+                            } else {
+                                kkFeedback.className = 'small mt-1 text-muted';
+                                kkFeedback.innerHTML = `<i class="fa-solid fa-circle-info me-1"></i> Nomor KK baru. Anda akan terdaftar sebagai anggota / kepala keluarga baru.`;
+                            }
+                        });
+                }, 400);
+            } else {
+                kkFeedback.classList.add('d-none');
+            }
+        });
+    </script>
 </body>
 </html>

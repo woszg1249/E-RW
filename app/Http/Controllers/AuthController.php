@@ -112,6 +112,49 @@ class AuthController extends Controller
         return redirect()->route('dashboard')->with('success', 'Pendaftaran berhasil! Selamat datang di RT RW Digital.');
     }
 
+    public function checkNik(Request $request)
+    {
+        $nik = trim($request->nik ?? '');
+        if (!$nik || strlen($nik) < 10) {
+            return response()->json(['valid' => true, 'exists' => false]);
+        }
+
+        $exists = User::where('nik', $nik)->exists();
+        if ($exists) {
+            return response()->json([
+                'valid' => false,
+                'exists' => true,
+                'message' => "NIK {$nik} sudah terdaftar di sistem warga RW 19."
+            ]);
+        }
+
+        return response()->json(['valid' => true, 'exists' => false, 'message' => 'NIK dapat digunakan.']);
+    }
+
+    public function checkKk(Request $request)
+    {
+        $noKk = trim($request->no_kk ?? '');
+        if (!$noKk || strlen($noKk) < 10) {
+            return response()->json(['found' => false]);
+        }
+
+        $members = User::where('no_kk', $noKk)->get();
+        if ($members->isNotEmpty()) {
+            $kepala = $members->firstWhere('status_keluarga', 'Kepala Keluarga') ?? $members->first();
+            return response()->json([
+                'found' => true,
+                'no_kk' => $noKk,
+                'kepala_keluarga' => $kepala->nama ?? '-',
+                'alamat' => $kepala->alamat ?? '',
+                'rt' => $kepala->rt ?? '06',
+                'rw' => $kepala->rw ?? '19',
+                'total_anggota' => $members->count(),
+            ]);
+        }
+
+        return response()->json(['found' => false]);
+    }
+
     public function logout(Request $request)
     {
         Auth::logout();
