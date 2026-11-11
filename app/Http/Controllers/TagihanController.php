@@ -29,15 +29,29 @@ class TagihanController extends Controller
             $query->where('bulan_tahun', 'like', "%{$request->bulan_tahun}%");
         }
 
+        if ($request->filled('rt')) {
+            $rt = $request->rt;
+            $query->whereHas('user', function($q) use ($rt) {
+                $q->where('rt', $rt);
+            });
+        }
+
         $tagihanList = $query->orderBy('id_tagihan', 'desc')->paginate(15)->withQueryString();
 
-        $totalTunggakan = $user->isWarga()
-            ? Tagihan::where('id_user', $user->id)->where('status_bayar', 'Belum Lunas')->sum('jumlah')
-            : Tagihan::where('status_bayar', 'Belum Lunas')->sum('jumlah');
+        $totalTunggakanQuery = Tagihan::where('status_bayar', 'Belum Lunas');
+        $totalLunasQuery = Tagihan::where('status_bayar', 'Lunas');
 
-        $totalLunas = $user->isWarga()
-            ? Tagihan::where('id_user', $user->id)->where('status_bayar', 'Lunas')->sum('jumlah')
-            : Tagihan::where('status_bayar', 'Lunas')->sum('jumlah');
+        if ($user->isWarga()) {
+            $totalTunggakanQuery->where('id_user', $user->id);
+            $totalLunasQuery->where('id_user', $user->id);
+        } elseif ($request->filled('rt')) {
+            $rt = $request->rt;
+            $totalTunggakanQuery->whereHas('user', function($q) use ($rt) { $q->where('rt', $rt); });
+            $totalLunasQuery->whereHas('user', function($q) use ($rt) { $q->where('rt', $rt); });
+        }
+
+        $totalTunggakan = $totalTunggakanQuery->sum('jumlah');
+        $totalLunas = $totalLunasQuery->sum('jumlah');
 
         $daftarWarga = $user->isAdmin() ? User::where('role', 'Warga')->orderBy('nama', 'asc')->get() : [];
 
@@ -50,15 +64,21 @@ class TagihanController extends Controller
             'bulan_tahun' => 'required|string', // misal: "November 2026"
             'tanggal_tagihan' => 'required|date',
             'jumlah' => 'required|numeric|min:1000',
-            'target' => 'required|in:semua,individu',
+            'target' => 'required|in:semua,rt06,rt07,individu',
             'id_user' => 'nullable|required_if:target,individu|exists:users,id',
         ]);
 
-        if ($validated['target'] === 'semua') {
-            $wargaList = User::where('role', 'Warga')->get();
+        if (in_array($validated['target'], ['semua', 'rt06', 'rt07'])) {
+            $wargaQuery = User::where('role', 'Warga');
+            if ($validated['target'] === 'rt06') {
+                $wargaQuery->where('rt', '06');
+            } elseif ($validated['target'] === 'rt07') {
+                $wargaQuery->where('rt', '07');
+            }
+
+            $wargaList = $wargaQuery->get();
             $count = 0;
             foreach ($wargaList as $w) {
-                // Hindari duplikasi tagihan untuk bulan yang sama
                 $ada = Tagihan::where('id_user', $w->id)->where('bulan_tahun', $validated['bulan_tahun'])->first();
                 if (!$ada) {
                     Tagihan::create([
@@ -82,59 +102,68 @@ class TagihanController extends Controller
                 'status_bayar' => 'Belum Lunas',
                 'tgl_buat' => now(),
             ]);
-            return redirect()->route('tagihan.index')->with('success', 'Tagihan berhasil dibuat untuk warga terpilih.');
+
+            return redirect()->route('tagihan.index')->with('success', 'Tagihan individu berhasil dibuat!');
         }
     }
 
     public function bayar(Request $request, $id)
     {
-        $tagihan = Tagihan::with('user')->findOrFail($id);
+        $tagihan = Tagihan::findOrFail($id);
 
         if (auth()->user()->isWarga() && $tagihan->id_user !== auth()->id()) {
-            abort(403, 'Akses tidak sah');
+            abort(403, 'Akses tidak diizinkan.');
         }
+
+        $request->validate([
+            'metode' => 'required|string|max:50',
+            'keterangan' => 'nullable|string',
+        ]);
 
         $tagihan->update([
             'status_bayar' => 'Lunas',
             'tgl_update' => now(),
         ]);
 
-        // Catat otomatis ke Kas Masuk RT
-        Keuangan::create([
-            'nama_warga' => $tagihan->user->nama ?? 'Warga RT',
-            'jenis' => 'masuk',
-            'keterangan' => 'Pembayaran Iuran Kas RT (' . $tagihan->bulan_tahun . ') - Tagihan #' . $tagihan->id_tagihan,
-            'jumlah' => $tagihan->jumlah,
-            'tanggal' => now()->toDateString(),
-        ]);
-
-        // Catat riwayat transaksi
         TransaksiPembayaran::create([
-            'order_id' => 'INV-' . strtoupper(Str::random(10)),
             'id_user' => $tagihan->id_user,
-            'nama_warga' => $tagihan->user->nama ?? 'Warga',
-            'jenis_kas' => 'masuk',
-            'keterangan' => 'Iuran ' . $tagihan->bulan_tahun,
-            'jumlah' => $tagihan->jumlah,
             'id_tagihan' => $tagihan->id_tagihan,
-            'metode' => $request->input('metode', 'Manual Admin / Transfer'),
-            'status' => 'settlement',
-            'created_at' => now(),
-            'paid_at' => now(),
+            'jumlah_bayar' => $tagihan->jumlah,
+            'metode_pembayaran' => $request->metode,
+            'status' => 'success',
+            'tanggal_bayar' => now(),
+            'order_id' => 'INV-' . strtoupper(Str::random(10)),
         ]);
 
-        return redirect()->route('tagihan.index')->with('success', 'Tagihan telah berhasil dibayar & tercatat di Buku Kas RT!');
+        $namaWarga = $tagihan->user->nama ?? 'Warga';
+        $rtWarga = $tagihan->user->rt ?? '06';
+
+        Keuangan::create([
+            'kategori' => 'Iuran Warga',
+            'deskripsi' => "Iuran {$tagihan->bulan_tahun} - {$namaWarga} (RT {$rtWarga}/RW 19) [{$request->metode}]",
+            'jumlah' => $tagihan->jumlah,
+            'jenis' => 'masuk',
+            'tanggal' => now()->toDateString(),
+            'nama_penyetor' => $namaWarga,
+            'status' => 'diterima',
+            'created_at' => now(),
+        ]);
+
+        return redirect()->route('tagihan.index')->with('success', 'Pembayaran tagihan iuran berhasil dikonfirmasi dan dicatat ke Kas RT!');
     }
 
-    public function dismissNotif($id)
+    public function dismissNotif()
     {
-        NotifDismissed::firstOrCreate([
-            'id_tagihan' => $id,
-            'id_user' => auth()->id(),
-        ], [
-            'created_at' => now(),
-        ]);
+        $user = auth()->user();
+        $latest = Tagihan::where('id_user', $user->id)->where('status_bayar', 'Belum Lunas')->latest('id_tagihan')->first();
 
-        return back()->with('success', 'Notifikasi disembunyikan.');
+        if ($latest) {
+            NotifDismissed::firstOrCreate([
+                'id_user' => $user->id,
+                'id_tagihan' => $latest->id_tagihan,
+            ]);
+        }
+
+        return response()->json(['status' => 'success']);
     }
 }

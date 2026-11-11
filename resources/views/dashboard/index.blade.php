@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Dashboard')
-@section('page_title', 'Ringkasan Informasi RT 06 / RW 19')
+@section('page_title', 'Ringkasan Informasi RW 19 (RT 06 & RT 07)')
 
 @section('content')
 <div class="row g-4">
@@ -11,11 +11,11 @@
             <div class="row align-items-center">
                 <div class="col-lg-8">
                     <span class="badge bg-white text-success px-3 py-1 rounded-pill mb-2 fw-semibold">
-                        <i class="fa-solid fa-circle-check me-1"></i> Sistem Aktif & Terhubung
+                        <i class="fa-solid fa-circle-check me-1"></i> Sistem Wilayah Aktif: RW 19 (RT 06 & RT 07)
                     </span>
                     <h3 class="fw-bold mb-1">Halo, {{ $user->nama }}! 👋</h3>
                     <p class="mb-0 opacity-90" style="font-size: 0.95rem;">
-                        Selamat datang di portal pelayanan digital RT 06 / RW 19 Kelurahan Bekasi Jaya. Anda login sebagai <strong>{{ $user->role }}</strong>.
+                        Selamat datang di portal pelayanan digital RW 19 (RT 06 & RT 07) Kelurahan Bekasi Jaya. Anda login sebagai <strong>{{ $user->role }}</strong>.
                     </p>
                 </div>
                 <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
@@ -57,8 +57,12 @@
                 </div>
             </div>
             <h3 class="fw-bold text-dark mb-1">{{ number_format($totalWarga) }} Jiwa</h3>
-            <div class="small text-muted">
-                Terbagi dalam <strong>{{ $totalKK }}</strong> Kartu Keluarga (KK)
+            <div class="small text-muted mb-2">
+                Terbagi dalam <strong>{{ $totalKK }}</strong> KK
+            </div>
+            <div class="d-flex gap-1">
+                <span class="badge bg-success bg-opacity-10 text-success border">RT 06: {{ $totalWargaRt06 }}</span>
+                <span class="badge bg-primary bg-opacity-10 text-primary border">RT 07: {{ $totalWargaRt07 }}</span>
             </div>
         </div>
     </div>
@@ -161,7 +165,7 @@
     <div class="col-lg-4">
         <!-- Quick Stats Grid -->
         <div class="card-custom p-4 mb-4">
-            <h6 class="fw-bold text-dark mb-3">Layanan Terpadu RT 06</h6>
+            <h6 class="fw-bold text-dark mb-3">Layanan Terpadu RW 19 (RT 06 & RT 07)</h6>
             <div class="row g-2">
                 <div class="col-6">
                     <a href="{{ route('umkm.index') }}" class="text-decoration-none">

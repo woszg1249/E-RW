@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'Inventaris Aset RT')
-@section('page_title', 'Inventaris & Peminjaman Aset RT 06')
+@section('title', 'Inventaris Aset RW 19')
+@section('page_title', 'Inventaris & Fasilitas RW 19 (RT 06 & RT 07)')
 
 @section('content')
 <div class="row g-4">
@@ -9,7 +9,7 @@
     <div class="col-12">
         <div class="card-custom p-4 bg-white d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
             <div>
-                <h5 class="fw-bold mb-1">Inventaris & Fasilitas Milik Warga RT 06</h5>
+                <h5 class="fw-bold mb-1">Inventaris & Fasilitas Milik Warga RW 19 (RT 06 & RT 07)</h5>
                 <p class="text-muted small mb-0">Warga dapat mengajukan peminjaman fasilitas (kursi, tenda, sound system, proyektor) secara online</p>
             </div>
 

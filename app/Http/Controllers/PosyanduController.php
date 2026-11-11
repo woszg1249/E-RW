@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Posyandu;
 use App\Models\User;
+use App\Services\PosyanduGrowthService;
 use Illuminate\Http\Request;
 
 class PosyanduController extends Controller
@@ -14,14 +15,24 @@ class PosyanduController extends Controller
 
         if ($request->filled('search')) {
             $s = $request->search;
-            $query->where('nama_bayi', 'like', "%{$s}%")
+            $query->where(function($q) use ($s) {
+                $q->where('nama_bayi', 'like', "%{$s}%")
                   ->orWhere('status_kesehatan', 'like', "%{$s}%");
+            });
+        }
+
+        if ($request->filled('rt')) {
+            $rt = $request->rt;
+            $query->whereHas('warga', function($q) use ($rt) {
+                $q->where('rt', $rt);
+            });
         }
 
         $posyanduList = $query->orderBy('tanggal_pemeriksaan', 'desc')->paginate(15)->withQueryString();
         $wargaList = User::where('role', 'Warga')->orderBy('nama', 'asc')->get();
+        $standards = PosyanduGrowthService::STANDARDS;
 
-        return view('posyandu.index', compact('posyanduList', 'wargaList'));
+        return view('posyandu.index', compact('posyanduList', 'wargaList', 'standards'));
     }
 
     public function store(Request $request)
@@ -33,28 +44,32 @@ class PosyanduController extends Controller
             'berat_badan' => 'required|numeric|min:0',
             'tinggi_badan' => 'nullable|numeric|min:0',
             'lingkar_kepala' => 'nullable|numeric|min:0',
-            'status_kesehatan' => 'nullable|string|max:50',
+            'status_kesehatan' => 'nullable|string|max:100',
             'catatan' => 'nullable|string',
             'tanggal_pemeriksaan' => 'required|date',
             'pemeriksaan_oleh' => 'nullable|string|max:100',
             'jenis_kelamin' => 'required|in:Laki-laki,Perempuan',
         ]);
 
-        if (empty($validated['status_kesehatan'])) {
-            $bb = $validated['berat_badan'];
-            $usia = $validated['usia_bulan'];
-            if ($bb < 6 && $usia > 6) {
-                $validated['status_kesehatan'] = 'Perlu Perhatian';
-            } else {
-                $validated['status_kesehatan'] = 'Gizi Baik / Sehat';
-            }
+        // Hitung otomatis status kesehatan dari standar ukuran bayi normal (1-12 bulan)
+        $eval = PosyanduGrowthService::evaluate(
+            $validated['jenis_kelamin'],
+            (int) $validated['usia_bulan'],
+            (float) $validated['berat_badan'],
+            isset($validated['tinggi_badan']) && $validated['tinggi_badan'] > 0 ? (float) $validated['tinggi_badan'] : null,
+            isset($validated['lingkar_kepala']) && $validated['lingkar_kepala'] > 0 ? (float) $validated['lingkar_kepala'] : null
+        );
+
+        // Jika status_kesehatan kosong atau bernilai default / auto, gunakan kalkulasi otomatis
+        if (empty($validated['status_kesehatan']) || $validated['status_kesehatan'] === 'auto') {
+            $validated['status_kesehatan'] = $eval['status'];
         }
 
         $validated['pemeriksaan_oleh'] = $validated['pemeriksaan_oleh'] ?? auth()->user()->nama;
 
         Posyandu::create($validated);
 
-        return redirect()->route('posyandu.index')->with('success', 'Catatan pemeriksaan Posyandu berhasil disimpan!');
+        return redirect()->route('posyandu.index')->with('success', 'Catatan pemeriksaan Posyandu berhasil disimpan dengan analisis status kesehatan otomatis!');
     }
 
     public function destroy($id)
@@ -65,9 +80,16 @@ class PosyanduController extends Controller
         return redirect()->route('posyandu.index')->with('success', 'Data posyandu berhasil dihapus.');
     }
 
-    public function cetak()
+    public function cetak(Request $request)
     {
-        $data = Posyandu::with('warga')->orderBy('tanggal_pemeriksaan', 'desc')->get();
+        $query = Posyandu::with('warga');
+        if ($request->filled('rt')) {
+            $rt = $request->rt;
+            $query->whereHas('warga', function($q) use ($rt) {
+                $q->where('rt', $rt);
+            });
+        }
+        $data = $query->orderBy('tanggal_pemeriksaan', 'desc')->get();
         return view('posyandu.cetak', compact('data'));
     }
 }

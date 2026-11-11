@@ -197,6 +197,11 @@
         </table>
 
         <!-- Tanda Tangan -->
+        @php
+            $isRt07 = ($kepala->rt == '07');
+            $namaRt = $isRt07 ? 'BAMBANG' : 'DIMAS';
+            $labelRt = $isRt07 ? '07' : '06';
+        @endphp
         <div class="row text-center mt-4" style="font-size: 0.85rem;">
             <div class="col-4">
                 <p class="mb-5">KEPALA KELUARGA</p>
@@ -205,9 +210,9 @@
             </div>
             <div class="col-4">
                 <p class="mb-2">Dikeluarkan Tanggal: {{ date('d-m-Y') }}</p>
-                <p class="mb-5">KETUA RT 06 / RW 19</p>
-                <p class="fw-bold text-decoration-underline mb-0">REIVAL AL KHAFI</p>
-                <small>NIP/NIK: 3275012304950001</small>
+                <p class="mb-5">KETUA RT {{ $labelRt }} / RW 19</p>
+                <p class="fw-bold text-decoration-underline mb-0">{{ $namaRt }}</p>
+                <small>Ketua RT {{ $labelRt }} / RW 19</small>
             </div>
             <div class="col-4">
                 <p class="mb-5">KEPALA DINAS KEPENDUDUKAN DAN PENCATATAN SIPIL</p>

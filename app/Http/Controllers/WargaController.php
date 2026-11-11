@@ -33,9 +33,11 @@ class WargaController extends Controller
 
         $wargaList = $query->orderBy('nama', 'asc')->paginate(20)->withQueryString();
         $totalWarga = User::where('role', 'Warga')->count();
+        $totalWargaRt06 = User::where('role', 'Warga')->where('rt', '06')->count();
+        $totalWargaRt07 = User::where('role', 'Warga')->where('rt', '07')->count();
         $totalKK = User::whereNotNull('no_kk')->where('no_kk', '!=', '')->distinct('no_kk')->count('no_kk');
 
-        return view('warga.index', compact('wargaList', 'totalWarga', 'totalKK'));
+        return view('warga.index', compact('wargaList', 'totalWarga', 'totalWargaRt06', 'totalWargaRt07', 'totalKK'));
     }
 
     public function store(Request $request)
@@ -136,11 +138,16 @@ class WargaController extends Controller
     public function kelolaKK(Request $request)
     {
         $search = $request->search;
+        $rt = $request->rt;
 
         $kkListQuery = User::whereNotNull('no_kk')
             ->where('no_kk', '!=', '')
             ->select('no_kk', 'alamat', 'rt', 'rw')
             ->groupBy('no_kk', 'alamat', 'rt', 'rw');
+
+        if ($rt) {
+            $kkListQuery->where('rt', $rt);
+        }
 
         if ($search) {
             $kkListQuery->where(function ($q) use ($search) {

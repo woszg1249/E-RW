@@ -17,18 +17,42 @@ class SuratController extends Controller
         }
 
         if ($request->filled('status')) {
-            $query->where('status', $request->status);
+            if ($request->status === 'Disetujui') {
+                $query->whereIn('status', ['Disetujui', 'ACC']);
+            } else {
+                $query->where('status', $request->status);
+            }
+        }
+
+        if ($request->filled('rt')) {
+            $rt = $request->rt;
+            $query->where(function($q) use ($rt) {
+                $q->where('nama_rt', 'like', "%{$rt}%")
+                  ->orWhereHas('user', function($uq) use ($rt) {
+                      $uq->where('rt', $rt);
+                  });
+            });
+        }
+
+        if ($request->filled('search')) {
+            $s = $request->search;
+            $query->where(function($q) use ($s) {
+                $q->where('nama', 'like', "%{$s}%")
+                  ->orWhere('jenis_surat', 'like', "%{$s}%")
+                  ->orWhere('tujuan', 'like', "%{$s}%")
+                  ->orWhere('nik', 'like', "%{$s}%");
+            });
         }
 
         $suratList = $query->orderBy('id', 'desc')->paginate(12)->withQueryString();
 
         $totalMenunggu = $user->isWarga()
-            ? SuratPengajuan::where('id_user', $user->id)->where('status', 'Menunggu')->count()
-            : SuratPengajuan::where('status', 'Menunggu')->count();
+            ? SuratPengajuan::where('id_user', $user->id)->whereIn('status', ['Menunggu', 'Proses'])->count()
+            : SuratPengajuan::whereIn('status', ['Menunggu', 'Proses'])->count();
 
         $totalDisetujui = $user->isWarga()
-            ? SuratPengajuan::where('id_user', $user->id)->where('status', 'Disetujui')->count()
-            : SuratPengajuan::where('status', 'Disetujui')->count();
+            ? SuratPengajuan::where('id_user', $user->id)->whereIn('status', ['Disetujui', 'ACC'])->count()
+            : SuratPengajuan::whereIn('status', ['Disetujui', 'ACC'])->count();
 
         return view('surat.index', compact('suratList', 'totalMenunggu', 'totalDisetujui'));
     }
@@ -49,6 +73,11 @@ class SuratController extends Controller
             'keterangan' => 'nullable|string',
         ]);
 
+        $rtPilihan = $validated['nama_rt'] ?? ('RT ' . ($user->rt ?? '06'));
+        if (!str_starts_with(strtoupper($rtPilihan), 'RT')) {
+            $rtPilihan = 'RT ' . str_pad($rtPilihan, 2, '0', STR_PAD_LEFT);
+        }
+
         SuratPengajuan::create([
             'id_user' => $user->id,
             'nama' => $user->nama,
@@ -57,8 +86,8 @@ class SuratController extends Controller
             'ttl' => ($user->tempat_lahir ?? 'Bekasi') . ', ' . ($user->tanggal_lahir ? $user->tanggal_lahir->format('d-m-Y') : '01-01-2000'),
             'alamat' => $user->alamat ?? '-',
             'tujuan' => $validated['tujuan'],
-            'nama_rt' => $validated['nama_rt'] ?? ('06 / ' . ($user->rt ?? '06')),
-            'nama_rw' => $validated['nama_rw'] ?? ('19 / ' . ($user->rw ?? '19')),
+            'nama_rt' => $rtPilihan,
+            'nama_rw' => $validated['nama_rw'] ?? 'RW 19',
             'kelurahan' => $validated['kelurahan'] ?? 'Bekasi Jaya',
             'kecamatan' => $validated['kecamatan'] ?? 'Bekasi Timur',
             'kota' => $validated['kota'] ?? 'Kota Bekasi',
@@ -76,12 +105,13 @@ class SuratController extends Controller
     {
         $surat = SuratPengajuan::findOrFail($id);
         $request->validate([
-            'status' => 'required|in:Menunggu,Disetujui,Ditolak',
+            'status' => 'required|in:Menunggu,Disetujui,ACC,Ditolak',
         ]);
 
-        $surat->update(['status' => $request->status]);
+        $statusToSave = ($request->status === 'ACC') ? 'Disetujui' : $request->status;
+        $surat->update(['status' => $statusToSave]);
 
-        return redirect()->route('surat.index')->with('success', 'Status pengajuan surat berhasil diubah menjadi ' . $request->status);
+        return redirect()->route('surat.index')->with('success', 'Status pengajuan surat #' . $surat->id . ' berhasil diubah menjadi: ' . $statusToSave);
     }
 
     public function cetak($id)

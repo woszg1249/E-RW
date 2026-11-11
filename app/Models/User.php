@@ -70,6 +70,20 @@ class User extends Authenticatable
         return strtoupper($this->role ?? '') === 'WARGA';
     }
 
+    public static function getKetuaRw($rw = '19'): string
+    {
+        return 'FABIAN';
+    }
+
+    public static function getKetuaRt($rt = '06'): string
+    {
+        $rtClean = ltrim((string)$rt, '0');
+        if ($rtClean === '7' || $rt === '07') {
+            return 'BAMBANG';
+        }
+        return 'DIMAS';
+    }
+
     public function tagihan()
     {
         return $this->hasMany(Tagihan::class, 'id_user');

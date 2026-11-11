@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'Buku Kas RT')
-@section('page_title', 'Buku Kas RT 06 / RW 19')
+@section('title', 'Buku Kas Keuangan')
+@section('page_title', 'Buku Kas Wilayah RW 19 (RT 06 & RT 07)')
 
 @section('content')
 <div class="row g-4">

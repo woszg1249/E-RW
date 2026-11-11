@@ -271,7 +271,7 @@
             <img src="{{ asset('img/logo_ert_rw.svg') }}" alt="Logo RT RW Digital">
             <div>
                 <h6>RT RW DIGITAL</h6>
-                <span>RW 19 • RT 06 Bersatu</span>
+                <span>RW 19 (RT 06 & RT 07)</span>
             </div>
         </div>
 
@@ -369,7 +369,17 @@
                         <div class="d-none d-sm-block text-start">
                             <div class="fw-bold text-dark lh-sm" style="font-size: 0.85rem;">{{ auth()->user()->nama }}</div>
                             <span class="badge-role {{ auth()->user()->isAdmin() ? 'admin' : 'warga' }}">
-                                {{ auth()->user()->role }} • RT {{ auth()->user()->rt ?? '06' }}
+                                @if(auth()->user()->username === 'fabian')
+                                    Ketua RW 19
+                                @elseif(auth()->user()->username === 'dimas')
+                                    Ketua RT 06
+                                @elseif(auth()->user()->username === 'rt07')
+                                    Ketua RT 07
+                                @elseif(auth()->user()->isAdmin())
+                                    Admin • RT {{ auth()->user()->rt ?? '07' }}
+                                @else
+                                    Warga • RT {{ auth()->user()->rt ?? '06' }}
+                                @endif
                             </span>
                         </div>
                     </div>
@@ -433,7 +443,7 @@
         </main>
 
         <footer class="bg-white border-top py-3 px-4 text-center text-muted" style="font-size: 0.85rem;">
-            &copy; {{ date('Y') }} <strong>E-RT RW Digital Bersatu</strong> • Dikembangkan dengan Laravel Framework &bull; RT 06 / RW 19
+            &copy; {{ date('Y') }} <strong>E-RT RW Digital Bersatu</strong> • Dikembangkan dengan Laravel Framework &bull; Wilayah RW 19 (RT 06 & RT 07)
         </footer>
     </div>
 

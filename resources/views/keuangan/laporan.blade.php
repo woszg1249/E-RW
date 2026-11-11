@@ -59,7 +59,7 @@
             <div class="d-flex align-items-center justify-content-center gap-4 pb-3 mb-4 border-bottom border-2 border-dark text-center">
                 <img src="{{ asset('img/logo_ert_rw.svg') }}" alt="Logo RT RW" style="width: 70px; height: 70px;">
                 <div>
-                    <h4 class="fw-bold mb-0 text-uppercase tracking-wide">RUKUN TETANGGA 06 / RUKUN WARGA 19</h4>
+                    <h4 class="fw-bold mb-0 text-uppercase tracking-wide">RUKUN WARGA 19 (RT 06 & RT 07)</h4>
                     <h5 class="fw-bold mb-1 text-uppercase">KELURAHAN BEKASI JAYA - KECAMATAN BEKASI TIMUR</h5>
                     <p class="mb-0 small text-secondary">Sekretariat: Jl. Melati Raya No. 12, RW 19, Bekasi Jaya, Kota Bekasi • Telp: 0812-3456-7890</p>
                 </div>
@@ -143,19 +143,26 @@
 
             <!-- Signatures Section -->
             <div class="row text-center mt-5 pt-3">
-                <div class="col-6">
+                <div class="col-4">
                     <p class="mb-1 text-muted small">Mengetahui,</p>
+                    <p class="fw-bold mb-5">Ketua RW 19</p>
+                    <br>
+                    <p class="fw-bold text-decoration-underline mb-0">FABIAN</p>
+                    <small class="text-muted">Ketua RW 19 Bekasi Jaya</small>
+                </div>
+                <div class="col-4">
+                    <p class="mb-1 text-muted small">Menyetujui,</p>
                     <p class="fw-bold mb-5">Ketua RT 06</p>
                     <br>
-                    <p class="fw-bold text-decoration-underline mb-0">Reival al khafi</p>
-                    <small class="text-muted">NIP/NIK: 3275012304950001</small>
+                    <p class="fw-bold text-decoration-underline mb-0">DIMAS</p>
+                    <small class="text-muted">Ketua RT 06 / RW 19</small>
                 </div>
-                <div class="col-6">
+                <div class="col-4">
                     <p class="mb-1 text-muted small">Bekasi, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</p>
-                    <p class="fw-bold mb-5">Bendahara RT 06</p>
+                    <p class="fw-bold mb-5">Ketua RT 07</p>
                     <br>
-                    <p class="fw-bold text-decoration-underline mb-0">Agus Kusuma</p>
-                    <small class="text-muted">NIP/NIK: 3275012304950002</small>
+                    <p class="fw-bold text-decoration-underline mb-0">BAMBANG</p>
+                    <small class="text-muted">Ketua RT 07 / RW 19</small>
                 </div>
             </div>
         </div>

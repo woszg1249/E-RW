@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Agenda & Kegiatan Warga')
-@section('page_title', 'Agenda & Kegiatan RT 06 / RW 19')
+@section('page_title', 'Agenda & Kegiatan RW 19 (RT 06 & RT 07)')
 
 @section('content')
 <div class="row g-4">

@@ -79,29 +79,38 @@
 
     <div class="text-center mb-3 no-print">
         <button onclick="window.print()" class="btn btn-primary px-4 fw-bold">
-            Cetak Surat Resmi (Print / Simpan PDF)
+            <i class="fa-solid fa-print"></i> Cetak Surat Resmi (Print / Simpan PDF)
         </button>
     </div>
+
+    @php
+        // Deteksi RT pemohon surat secara cerdas
+        $rtRaw = $surat->nama_rt ?? ($surat->user->rt ?? '06');
+        $isRt07 = str_contains($rtRaw, '07') || str_contains($rtRaw, '7');
+        $rtFormatted = $isRt07 ? '07' : '06';
+        $namaKetuaRt = $isRt07 ? 'BAMBANG' : 'DIMAS';
+        $namaKetuaRw = 'FABIAN';
+    @endphp
 
     <div class="surat-container">
         <!-- Kop Surat -->
         <div class="kop-surat d-flex align-items-center justify-content-center gap-3">
             <img src="{{ asset('img/logo_ert_rw.svg') }}" alt="Logo RT RW" style="width: 65px; height: 65px;">
             <div>
-                <h4>RUKUN TETANGGA 06 / RUKUN WARGA 19</h4>
+                <h4>RUKUN TETANGGA {{ $rtFormatted }} / RUKUN WARGA 19</h4>
                 <h5>KELURAHAN BEKASI JAYA - KECAMATAN BEKASI TIMUR</h5>
                 <h5>KOTA BEKASI - JAWA BARAT</h5>
-                <p>Sekretariat: Jl. Melati Raya Blok C No. 12, RW 19, Bekasi Jaya, Kota Bekasi 17113</p>
+                <p>Sekretariat: Lingkungan RT {{ $rtFormatted }} / RW 19, Bekasi Jaya, Bekasi Timur, Kota Bekasi 17113</p>
             </div>
         </div>
 
         <!-- Judul Surat -->
         <div class="judul-surat">
             <h5>{{ strtoupper($surat->jenis_surat) }}</h5>
-            <span>Nomor: {{ sprintf('%03d', $surat->id) }}/SK-RT06/RW19/{{ date('m/Y') }}</span>
+            <span>Nomor: {{ sprintf('%03d', $surat->id) }}/SK-RT{{ $rtFormatted }}/RW19/{{ date('m/Y') }}</span>
         </div>
 
-        <p>Yang bertanda tangan di bawah ini Ketua Rukun Tetangga (RT) 06 Rukun Warga (RW) 19 Kelurahan Bekasi Jaya, Kecamatan Bekasi Timur, Kota Bekasi, dengan ini menerangkan bahwa:</p>
+        <p>Yang bertanda tangan di bawah ini Ketua Rukun Tetangga (RT) {{ $rtFormatted }} Rukun Warga (RW) 19 Kelurahan Bekasi Jaya, Kecamatan Bekasi Timur, Kota Bekasi, dengan ini menerangkan bahwa:</p>
 
         <table class="table-borderless tabel-biodata w-100 my-3">
             <tr>
@@ -112,7 +121,7 @@
             <tr>
                 <td>2. NIK / No. KTP</td>
                 <td>:</td>
-                <td>{{ $surat->nik ?? '-' }}</td>
+                <td>{{ $surat->nik ?? ($surat->user->nik ?? '-') }}</td>
             </tr>
             <tr>
                 <td>3. Tempat, Tanggal Lahir</td>
@@ -137,12 +146,12 @@
             <tr>
                 <td>7. Alamat KTP / Domisili</td>
                 <td>:</td>
-                <td>{{ $surat->alamat ?? $surat->user->alamat ?? '-' }}</td>
+                <td>{{ $surat->alamat ?? ($surat->user->alamat ?? '-') }} (RT {{ $rtFormatted }} / RW 19)</td>
             </tr>
         </table>
 
         <p class="mt-3">
-            Bahwa orang tersebut di atas adalah benar warga yang berdomisili di lingkungan RT 06 / RW 19 Kelurahan Bekasi Jaya, Kecamatan Bekasi Timur, Kota Bekasi.
+            Bahwa orang tersebut di atas adalah benar warga yang berdomisili di lingkungan <strong>RT {{ $rtFormatted }} / RW 19</strong> Kelurahan Bekasi Jaya, Kecamatan Bekasi Timur, Kota Bekasi.
         </p>
 
         <p>
@@ -159,15 +168,15 @@
             <div class="col-6">
                 <p class="mb-5">Mengetahui,<br>Ketua RW 19</p>
                 <br>
-                <p class="fw-bold text-decoration-underline mb-0">H. AHMAD RIFAI, S.E.</p>
+                <p class="fw-bold text-decoration-underline mb-0">{{ $namaKetuaRw }}</p>
                 <small>Ketua RW 19 Bekasi Jaya</small>
             </div>
             <div class="col-6">
                 <p class="mb-1">Bekasi, {{ \Carbon\Carbon::parse($surat->tanggal_permohonan)->translatedFormat('d F Y') }}</p>
-                <p class="mb-5">Ketua RT 06</p>
+                <p class="mb-5">Ketua RT {{ $rtFormatted }}</p>
                 <br>
-                <p class="fw-bold text-decoration-underline mb-0">REIVAL AL KHAFI</p>
-                <small>Ketua RT 06 / RW 19</small>
+                <p class="fw-bold text-decoration-underline mb-0">{{ $namaKetuaRt }}</p>
+                <small>Ketua RT {{ $rtFormatted }} / RW 19</small>
             </div>
         </div>
     </div>
