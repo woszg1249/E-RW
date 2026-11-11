@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Direktori UMKM Warga')
-@section('page_title', 'Etalase & UMKM Warga RT 06')
+@section('page_title', 'Etalase & UMKM Warga RW 19 (RT 06 & RT 07)')
 
 @section('content')
 <div class="row g-4">
@@ -10,7 +10,7 @@
         <div class="card-custom p-4 bg-white d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
             <div>
                 <h5 class="fw-bold mb-1">Etalase Usaha Mikro, Kecil, & Menengah (UMKM) Warga</h5>
-                <p class="text-muted small mb-0">Dukung produk dan jasa tetangga sekitar lingkungan RT 06 / RW 19</p>
+                <p class="text-muted small mb-0">Dukung produk dan jasa tetangga sekitar lingkungan RW 19 (RT 06 & RT 07)</p>
             </div>
 
             <button class="btn btn-primary-custom rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#modalTambahUmkm">
@@ -148,15 +148,17 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-semibold small">Nomor WhatsApp Usaha <span class="text-danger">*</span></label>
-                            <input type="text" name="whatsapp" class="form-control" placeholder="08xxxxxxxxxx" required>
+                            <input type="text" name="whatsapp" class="form-control" placeholder="08xxxxxxxxxx" value="{{ old('whatsapp', auth()->user()->no_hp ?? '') }}" required>
+                            <small class="text-success" style="font-size: 0.78rem;"><i class="fa-solid fa-circle-check me-1"></i> Otomatis dari nomor HP akun Anda</small>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-semibold small">Jam Operasional</label>
-                            <input type="text" name="jam_operasional" class="form-control" placeholder="Contoh: 08.00 - 21.00 WIB">
+                            <input type="text" name="jam_operasional" class="form-control" placeholder="Contoh: 08.00 - 21.00 WIB" value="{{ old('jam_operasional', '08.00 - 21.00 WIB') }}">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold small">Alamat / Lokasi Usaha</label>
-                            <input type="text" name="alamat" class="form-control" placeholder="Contoh: Jl. Melati No. 5, RT 06">
+                            <label class="form-label fw-semibold small">Alamat / Lokasi Usaha <span class="text-danger">*</span></label>
+                            <input type="text" name="alamat" class="form-control" placeholder="Contoh: Jl. Melati No. 5, RT 06" value="{{ old('alamat', auth()->user()->alamat ?? '') }}" required>
+                            <small class="text-success" style="font-size: 0.78rem;"><i class="fa-solid fa-circle-check me-1"></i> Otomatis dari alamat domisili akun Anda</small>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-semibold small">Foto Produk / Toko (Opsional)</label>
