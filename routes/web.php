@@ -74,6 +74,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/posyandu', [PosyanduController::class, 'store'])->name('posyandu.store');
     Route::delete('/posyandu/{id}', [PosyanduController::class, 'destroy'])->name('posyandu.destroy')->middleware('admin');
     Route::get('/posyandu/cetak', [PosyanduController::class, 'cetak'])->name('posyandu.cetak');
+    Route::get('/posyandu/{id}/cetak', [PosyanduController::class, 'cetakDokumen'])->name('posyandu.cetak.dokumen');
 
     // Bank Sampah
     Route::get('/bank-sampah', [BankSampahController::class, 'index'])->name('bank-sampah.index');

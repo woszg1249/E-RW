@@ -64,9 +64,7 @@
                             <th>Lingkar Kepala</th>
                             <th>Status Kesehatan (Otomatis)</th>
                             <th>Tanggal Periksa</th>
-                            @if(auth()->user()->isAdmin())
-                                <th class="text-center">Aksi</th>
-                            @endif
+                            <th class="text-center" style="min-width: 150px;">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -106,17 +104,22 @@
                                     </span>
                                 </td>
                                 <td class="small text-muted">{{ \Carbon\Carbon::parse($p->tanggal_pemeriksaan)->format('d/m/Y') }}</td>
-                                @if(auth()->user()->isAdmin())
-                                    <td class="text-center">
-                                        <form action="{{ route('posyandu.destroy', $p->id) }}" method="POST" onsubmit="return confirm('Hapus catatan pemeriksaan posyandu ini?');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-outline-danger border-0" title="Hapus">
-                                                <i class="fa-solid fa-trash"></i>
-                                            </button>
-                                        </form>
-                                    </td>
-                                @endif
+                                <td class="text-center text-nowrap">
+                                    <div class="d-flex align-items-center justify-content-center gap-1">
+                                        <a href="{{ route('posyandu.cetak.dokumen', $p->id) }}" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill px-2 py-1 small" title="Cetak Surat Hasil Pemeriksaan Balita">
+                                            <i class="fa-solid fa-print me-1"></i> Cetak Hasil
+                                        </a>
+                                        @if(auth()->user()->isAdmin())
+                                            <form action="{{ route('posyandu.destroy', $p->id) }}" method="POST" onsubmit="return confirm('Hapus catatan pemeriksaan posyandu ini?');" class="d-inline">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-sm btn-outline-danger border-0 p-1 ms-1" title="Hapus Data">
+                                                    <i class="fa-solid fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        @endif
+                                    </div>
+                                </td>
                             </tr>
                         @empty
                             <tr>
@@ -127,8 +130,14 @@
                 </table>
             </div>
 
-            <div class="mt-4">
-                {{ $posyanduList->links('pagination::bootstrap-5') }}
+            <!-- Bottom Pagination Bar: 1 Halaman / Tab 10 Baris -->
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 mt-4 pt-3 border-top">
+                <div class="small text-muted">
+                    Menampilkan <strong>{{ $posyanduList->firstItem() ?? 0 }}</strong> – <strong>{{ $posyanduList->lastItem() ?? 0 }}</strong> dari total <strong>{{ $posyanduList->total() }}</strong> data pemeriksaan balita (<strong>10 baris per halaman</strong>).
+                </div>
+                <div>
+                    {{ $posyanduList->links('pagination::bootstrap-5') }}
+                </div>
             </div>
         </div>
     </div>

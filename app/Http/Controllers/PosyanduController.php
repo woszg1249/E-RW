@@ -28,7 +28,7 @@ class PosyanduController extends Controller
             });
         }
 
-        $posyanduList = $query->orderBy('tanggal_pemeriksaan', 'desc')->paginate(15)->withQueryString();
+        $posyanduList = $query->orderBy('tanggal_pemeriksaan', 'desc')->paginate(10)->withQueryString();
         $wargaList = User::where('role', 'Warga')->orderBy('nama', 'asc')->get();
         $standards = PosyanduGrowthService::STANDARDS;
 
@@ -91,5 +91,25 @@ class PosyanduController extends Controller
         }
         $data = $query->orderBy('tanggal_pemeriksaan', 'desc')->get();
         return view('posyandu.cetak', compact('data'));
+    }
+
+    public function cetakDokumen($id)
+    {
+        $posyandu = Posyandu::with('warga')->findOrFail($id);
+
+        $evaluation = PosyanduGrowthService::evaluate(
+            $posyandu->jenis_kelamin,
+            (int) $posyandu->usia_bulan,
+            (float) $posyandu->berat_badan,
+            $posyandu->tinggi_badan ? (float) $posyandu->tinggi_badan : null,
+            $posyandu->lingkar_kepala ? (float) $posyandu->lingkar_kepala : null
+        );
+
+        $warga = $posyandu->warga;
+        $rt = $warga->rt ?? '06';
+        $ketuaRt = User::getKetuaRt($rt);
+        $ketuaRw = User::getKetuaRw();
+
+        return view('posyandu.cetak_dokumen', compact('posyandu', 'evaluation', 'warga', 'rt', 'ketuaRt', 'ketuaRw'));
     }
 }

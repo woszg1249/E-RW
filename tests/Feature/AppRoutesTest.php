@@ -205,4 +205,36 @@ class AppRoutesTest extends TestCase
             'jumlah' => $tagihanKoperasi->jumlah,
         ]);
     }
+
+    public function test_cetak_dokumen_posyandu_per_balita_works_cleanly(): void
+    {
+        $posyandu = \App\Models\Posyandu::first();
+        if (!$posyandu) {
+            $user = User::first();
+            $posyandu = \App\Models\Posyandu::create([
+                'id_warga' => $user->id,
+                'nama_bayi' => 'Ananda Rizky Test',
+                'jenis_kelamin' => 'Laki-laki',
+                'usia_bulan' => 6,
+                'berat_badan' => 7.5,
+                'tinggi_badan' => 65.0,
+                'lingkar_kepala' => 43.0,
+                'status_kesehatan' => 'Gizi Baik / Normal (Sehat)',
+                'tanggal_pemeriksaan' => now()->toDateString(),
+            ]);
+        }
+
+        $admin = User::where('role', 'Admin')->first();
+        $this->actingAs($admin);
+
+        $response = $this->get('/posyandu/' . $posyandu->id . '/cetak');
+        $response->assertStatus(200);
+        $response->assertSee('SURAT KETERANGAN HASIL PEMERIKSAAN KESEHATAN BALITA');
+        $response->assertSee($posyandu->nama_bayi);
+
+        // Test Cetak Rekapitulasi Posyandu Seluruh Balita
+        $responseRekap = $this->get('/posyandu/cetak');
+        $responseRekap->assertStatus(200);
+        $responseRekap->assertSee('DATA REKAPITULASI PENIMBANGAN', false);
+    }
 }
