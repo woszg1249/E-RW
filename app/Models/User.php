@@ -70,6 +70,33 @@ class User extends Authenticatable
         return strtoupper($this->role ?? '') === 'WARGA';
     }
 
+    /**
+     * Urutkan hierarki keluarga sesuai standar Dukcapil:
+     * 1. Kepala Keluarga
+     * 2. Suami / Istri
+     * 3. Anak
+     * 4. Menantu / Cucu / Orangtua / Mertua / Famili Lain
+     */
+    public function scopeOrderFamilyHierarchy($query)
+    {
+        return $query->orderByRaw("
+            CASE 
+                WHEN LOWER(TRIM(COALESCE(status_keluarga, ''))) = 'kepala keluarga' THEN 1
+                WHEN LOWER(TRIM(COALESCE(status_keluarga, ''))) = 'suami' THEN 2
+                WHEN LOWER(TRIM(COALESCE(status_keluarga, ''))) = 'istri' THEN 3
+                WHEN LOWER(TRIM(COALESCE(status_keluarga, ''))) = 'anak' THEN 4
+                WHEN LOWER(TRIM(COALESCE(status_keluarga, ''))) = 'menantu' THEN 5
+                WHEN LOWER(TRIM(COALESCE(status_keluarga, ''))) = 'cucu' THEN 6
+                WHEN LOWER(TRIM(COALESCE(status_keluarga, ''))) = 'orangtua' THEN 7
+                WHEN LOWER(TRIM(COALESCE(status_keluarga, ''))) = 'mertua' THEN 8
+                WHEN LOWER(TRIM(COALESCE(status_keluarga, ''))) = 'famili lain' THEN 9
+                ELSE 10
+            END ASC
+        ")
+        ->orderByRaw("CASE WHEN tanggal_lahir IS NULL THEN 1 ELSE 0 END, tanggal_lahir ASC")
+        ->orderBy('id', 'asc');
+    }
+
     public static function getKetuaRw($rw = '19'): string
     {
         return 'FABIAN';

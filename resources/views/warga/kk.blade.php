@@ -32,6 +32,11 @@
             @php
                 $isRt07 = ($fam['rt'] == '07');
                 $badgeColor = $isRt07 ? 'bg-primary' : 'bg-success';
+                $famMembers = collect($fam['members'])->sortBy(function($m) {
+                    $status = strtolower(trim($m->status_keluarga ?? ''));
+                    $p = ['kepala keluarga' => 1, 'suami' => 2, 'istri' => 3, 'anak' => 4, 'menantu' => 5, 'cucu' => 6, 'orangtua' => 7, 'mertua' => 8, 'famili lain' => 9];
+                    return $p[$status] ?? 99;
+                })->values();
             @endphp
             <div class="col-lg-6">
                 <div class="card-custom p-4 h-100 bg-white">
@@ -64,7 +69,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($fam['members'] as $m)
+                                @foreach($famMembers as $m)
                                     <tr>
                                         <td>
                                             <div class="fw-semibold text-dark">{{ $m->nama }}</div>
@@ -135,6 +140,11 @@
                 @php
                     $isRt07 = ($fam['rt'] == '07');
                     $badgeColor = $isRt07 ? 'bg-primary' : 'bg-success';
+                    $famMembers = collect($fam['members'])->sortBy(function($m) {
+                        $status = strtolower(trim($m->status_keluarga ?? ''));
+                        $p = ['kepala keluarga' => 1, 'suami' => 2, 'istri' => 3, 'anak' => 4, 'menantu' => 5, 'cucu' => 6, 'orangtua' => 7, 'mertua' => 8, 'famili lain' => 9];
+                        return $p[$status] ?? 99;
+                    })->values();
                 @endphp
                 <div class="col-12">
                     <div class="card-custom p-4 bg-white border-top border-4 {{ $isRt07 ? 'border-primary' : 'border-success' }}">
@@ -176,7 +186,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach($fam['members'] as $idx => $m)
+                                    @foreach($famMembers as $idx => $m)
                                         <tr class="{{ $m->id == auth()->id() ? 'table-success bg-opacity-10 fw-semibold' : '' }}">
                                             <td class="ps-3">{{ $idx + 1 }}</td>
                                             <td>

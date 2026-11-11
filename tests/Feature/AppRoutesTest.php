@@ -78,6 +78,12 @@ class AppRoutesTest extends TestCase
         $responseCetakOwn = $this->get('/kk/' . $warga->no_kk . '/cetak');
         $responseCetakOwn->assertStatus(200);
 
+        // Pastikan anggota keluarga terurut dengan Kepala Keluarga di urutan pertama
+        $orderedMembers = User::where('no_kk', $warga->no_kk)->orderFamilyHierarchy()->get();
+        if ($orderedMembers->where('status_keluarga', 'Kepala Keluarga')->isNotEmpty()) {
+            $this->assertEquals('Kepala Keluarga', $orderedMembers->first()->status_keluarga);
+        }
+
         // Cetak KK orang lain harus ditolak 403
         $otherKk = User::where('no_kk', '!=', $warga->no_kk)->whereNotNull('no_kk')->value('no_kk');
         if ($otherKk) {

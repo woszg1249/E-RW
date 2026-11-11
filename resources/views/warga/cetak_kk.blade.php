@@ -80,6 +80,24 @@
     </div>
 
     <div class="kk-container">
+        @php
+            // Pastikan urutan anggota keluarga selalu mendahulukan Kepala Keluarga (No. 1)
+            $hierarchyMap = [
+                'kepala keluarga' => 1,
+                'suami' => 2,
+                'istri' => 3,
+                'anak' => 4,
+                'menantu' => 5,
+                'cucu' => 6,
+                'orangtua' => 7,
+                'mertua' => 8,
+                'famili lain' => 9,
+            ];
+            $members = $members->sortBy(function($m) use ($hierarchyMap) {
+                $status = strtolower(trim($m->status_keluarga ?? ''));
+                return $hierarchyMap[$status] ?? 99;
+            })->values();
+        @endphp
         <div class="header-title">
             <h3>KARTU KELUARGA</h3>
             <h4>No. {{ $no_kk }}</h4>

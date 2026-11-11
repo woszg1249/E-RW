@@ -175,10 +175,10 @@ class WargaController extends Controller
 
         $kkList = $kkListQuery->paginate(12)->withQueryString();
 
-        // Ambil anggota keluarga untuk setiap KK
+        // Ambil anggota keluarga untuk setiap KK dengan urutan resmi (Kepala Keluarga selalu di atas)
         $families = [];
         foreach ($kkList as $kk) {
-            $members = User::where('no_kk', $kk->no_kk)->orderBy('status_keluarga', 'asc')->get();
+            $members = User::where('no_kk', $kk->no_kk)->orderFamilyHierarchy()->get();
             $kepala = $members->firstWhere('status_keluarga', 'Kepala Keluarga') ?? $members->first();
             $families[] = [
                 'no_kk' => $kk->no_kk,
@@ -202,7 +202,8 @@ class WargaController extends Controller
             abort(403, 'Akses Ditolak! Demi privasi kependudukan, Anda hanya berhak mencetak Kartu Keluarga milik Anda sendiri.');
         }
 
-        $members = User::where('no_kk', $no_kk)->orderBy('status_keluarga', 'asc')->get();
+        // Ambil anggota keluarga dengan urutan resmi (Kepala Keluarga selalu No. 1 di atas)
+        $members = User::where('no_kk', $no_kk)->orderFamilyHierarchy()->get();
         if ($members->isEmpty()) {
             abort(404, 'Data Kartu Keluarga tidak ditemukan.');
         }
