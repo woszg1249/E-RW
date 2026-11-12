@@ -24,13 +24,13 @@ class BankSampahController extends Controller
 
         $transaksiList = $query->orderBy('id', 'desc')->paginate(15)->withQueryString();
 
-        $totalKg = $user->isWarga()
+        $totalKg = (float) (($user->isWarga()
             ? BankSampah::where('id_user', $user->id)->where('status', 'approved')->sum('berat_kg')
-            : BankSampah::where('status', 'approved')->sum('berat_kg');
+            : BankSampah::where('status', 'approved')->sum('berat_kg')) ?? 0);
 
-        $totalRupiah = $user->isWarga()
+        $totalRupiah = (float) (($user->isWarga()
             ? BankSampah::where('id_user', $user->id)->where('status', 'approved')->sum('total_harga')
-            : BankSampah::where('status', 'approved')->sum('total_harga');
+            : BankSampah::where('status', 'approved')->sum('total_harga')) ?? 0);
 
         $wargaList = $user->isAdmin() ? User::where('role', 'Warga')->orderBy('nama', 'asc')->get() : [];
 

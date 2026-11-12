@@ -9,14 +9,14 @@
     <div class="col-md-6">
         <div class="card-custom p-4 bg-white">
             <span class="text-muted small fw-bold text-uppercase">Total Sampah Terkumpul</span>
-            <h3 class="fw-bold text-primary mb-0 mt-1">{{ number_format($totalKg, 2) }} kg</h3>
+            <h3 class="fw-bold text-primary mb-0 mt-1">{{ number_format((float) ($totalKg ?? 0), 2) }} kg</h3>
             <small class="text-muted">Partisipasi warga dalam daur ulang & kebersihan lingkungan</small>
         </div>
     </div>
     <div class="col-md-6">
         <div class="card-custom p-4 bg-white">
             <span class="text-muted small fw-bold text-uppercase">Nilai Ekonomi Terkumpul</span>
-            <h3 class="fw-bold text-success mb-0 mt-1">Rp {{ number_format($totalRupiah, 0, ',', '.') }}</h3>
+            <h3 class="fw-bold text-success mb-0 mt-1">Rp {{ number_format((float) ($totalRupiah ?? 0), 0, ',', '.') }}</h3>
             <small class="text-muted">Total konversi rupiah dari tabungan sampah warga</small>
         </div>
     </div>
@@ -65,7 +65,7 @@
                                 <td class="fw-bold text-dark">{{ $item->berat_kg }} kg</td>
                                 <td class="small">Rp {{ number_format($item->harga_per_kg, 0, ',', '.') }}</td>
                                 <td class="fw-bold text-success">Rp {{ number_format($item->total_harga, 0, ',', '.') }}</td>
-                                <td class="small text-muted">{{ \Carbon\Carbon::parse($item->tanggal_pengumpulan)->format('d/m/Y H:i') }}</td>
+                                <td class="small text-muted">{{ $item->tanggal_pengumpulan ? \Carbon\Carbon::parse($item->tanggal_pengumpulan)->format('d/m/Y H:i') : '-' }}</td>
                                 <td>
                                     @if($item->status === 'approved')
                                         <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-1">
