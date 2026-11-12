@@ -7,16 +7,51 @@ use App\Models\Kegiatan;
 use App\Models\Umkm;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Log;
 
 class LandingController extends Controller
 {
     public function index()
     {
-        $totalWarga = User::where('role', 'Warga')->count();
-        $totalKK = User::whereNotNull('no_kk')->where('no_kk', '!=', '')->distinct('no_kk')->count('no_kk');
-        $totalUmkm = Umkm::where('status', 'Aktif')->count();
-        $totalSampahKg = BankSampah::where('status', 'approved')->sum('berat_kg') ?? 0;
-        $kegiatanTerbaru = Kegiatan::orderBy('tanggal_mulai', 'desc')->take(3)->get();
+        $totalWarga = 0;
+        $totalKK = 0;
+        $totalUmkm = 0;
+        $totalSampahKg = 0;
+        $kegiatanTerbaru = collect();
+
+        try {
+            if (Schema::hasTable('users')) {
+                $totalWarga = User::where('role', 'Warga')->count();
+                $totalKK = User::whereNotNull('no_kk')->where('no_kk', '!=', '')->distinct()->count('no_kk');
+            }
+        } catch (\Throwable $e) {
+            Log::warning('LandingController users query: ' . $e->getMessage());
+        }
+
+        try {
+            if (Schema::hasTable('umkm')) {
+                $totalUmkm = Umkm::where('status', 'Aktif')->count();
+            }
+        } catch (\Throwable $e) {
+            Log::warning('LandingController umkm query: ' . $e->getMessage());
+        }
+
+        try {
+            if (Schema::hasTable('bank_sampah')) {
+                $totalSampahKg = BankSampah::where('status', 'approved')->sum('berat_kg') ?? 0;
+            }
+        } catch (\Throwable $e) {
+            Log::warning('LandingController bank_sampah query: ' . $e->getMessage());
+        }
+
+        try {
+            if (Schema::hasTable('kegiatan')) {
+                $kegiatanTerbaru = Kegiatan::orderBy('tanggal_mulai', 'desc')->take(3)->get();
+            }
+        } catch (\Throwable $e) {
+            Log::warning('LandingController kegiatan query: ' . $e->getMessage());
+        }
 
         return view('landing', compact(
             'totalWarga',

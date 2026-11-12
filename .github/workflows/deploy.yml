@@ -85,28 +85,19 @@ jobs:
             git reset --hard origin/main
             
             composer install --no-dev --optimize-autoloader --no-interaction
+            
+            php artisan optimize:clear
             php artisan migrate --force
-
-            # Impor database dump & seed data warga serta 4 akun admin
-            if [ -f database/keuangan_rt_vps.sql ]; then
-              echo "📥 Sinkronisasi database dump warga & admin ke MySQL VPS..."
-              DB_USER=$(grep -E '^DB_USERNAME=' .env | cut -d '=' -f2 | tr -d '"'\'' ')
-              DB_PASS=$(grep -E '^DB_PASSWORD=' .env | cut -d '=' -f2 | tr -d '"'\'' ')
-              DB_NAME=$(grep -E '^DB_DATABASE=' .env | cut -d '=' -f2 | tr -d '"'\'' ')
-              DB_HOST=$(grep -E '^DB_HOST=' .env | cut -d '=' -f2 | tr -d '"'\'' ')
-              [ -z "$DB_HOST" ] && DB_HOST="127.0.0.1"
-
-              mysql -h "$DB_HOST" -u "$DB_USER" -p"$DB_PASS" "$DB_NAME" < database/keuangan_rt_vps.sql 2>/dev/null || true
-            fi
-
             php artisan db:seed --force
             
             npm ci --no-audit --no-fund
             npm run build
             
-            php artisan optimize:clear
             php artisan config:cache
             php artisan view:cache
+            
+            echo "📋 Log error terakhir (jika ada):"
+            tail -n 20 storage/logs/laravel.log 2>/dev/null || true
             
             echo "🎉 Deployment ke VPS Berhasil Selesai!"
             EOF
