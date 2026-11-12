@@ -3,11 +3,13 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 class ForgotPasswordTest extends TestCase
 {
+    use RefreshDatabase;
     public function test_login_page_contains_forgot_password_link(): void
     {
         $response = $this->get('/login');

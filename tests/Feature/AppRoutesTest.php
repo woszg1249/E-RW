@@ -3,10 +3,12 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class AppRoutesTest extends TestCase
 {
+    use RefreshDatabase;
     public function test_guest_can_see_login_and_register_pages(): void
     {
         $response = $this->get('/login');
@@ -200,8 +202,9 @@ class AppRoutesTest extends TestCase
 
         // Pastikan tagihan lunas dan tercatat di cicilan koperasi
         $this->assertEquals('Lunas', $tagihanKoperasi->fresh()->status_bayar);
+        $pinjamanId = \App\Models\KoperasiPinjaman::where('id_user', $warga->id)->latest('id')->value('id');
         $this->assertDatabaseHas('koperasi_cicilan', [
-            'id_pinjaman' => $pinjaman->id ?? \App\Models\KoperasiPinjaman::where('id_user', $warga->id)->latest('id')->value('id'),
+            'id_pinjaman' => $pinjamanId,
             'jumlah' => $tagihanKoperasi->jumlah,
         ]);
     }

@@ -13,6 +13,7 @@ use Tests\TestCase;
 
 class BankWargaTest extends TestCase
 {
+    use RefreshDatabase;
     public function test_warga_otomatis_memiliki_rekening_saat_akses_bank_warga(): void
     {
         $warga = User::where('role', 'Warga')->first();
@@ -20,6 +21,7 @@ class BankWargaTest extends TestCase
             $warga = User::create([
                 'nama' => 'Budi Santoso',
                 'username' => 'budi.santoso',
+                'email' => 'budi.santoso@example.com',
                 'password' => bcrypt('password'),
                 'role' => 'Warga',
                 'nik' => '3275019988770001',
