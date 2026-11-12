@@ -80,7 +80,9 @@ jobs:
             echo "📁 Menjalankan pembaruan di $(pwd) sebagai $(whoami)..."
             
             git config core.fileMode false
-            git pull --ff-only origin main
+            rm -f package-lock.json
+            git fetch origin main
+            git reset --hard origin/main
             
             composer install --no-dev --optimize-autoloader --no-interaction
             php artisan migrate --force
