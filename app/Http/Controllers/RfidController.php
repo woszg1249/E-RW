@@ -75,7 +75,7 @@ class RfidController extends Controller
         if ($user) {
             $saldoBankWarga = 0;
             if (Schema::hasTable('bank_warga_rekening')) {
-                $rek = BankWargaRekening::where('user_id', $user->id)->first();
+                $rek = BankWargaRekening::where('id_user', $user->id)->first();
                 if ($rek) {
                     $saldoBankWarga = (float) $rek->saldo;
                 }
@@ -174,7 +174,7 @@ class RfidController extends Controller
 
         // Sinkronkan ke rekening Bank Warga jika ada
         if (Schema::hasTable('bank_warga_rekening')) {
-            BankWargaRekening::where('user_id', $user->id)->update(['rfid_uid' => $cleanUid]);
+            BankWargaRekening::where('id_user', $user->id)->update(['rfid_uid' => $cleanUid]);
         }
 
         // Hapus cache scan terakhir agar UI tidak looping pairing
@@ -207,7 +207,7 @@ class RfidController extends Controller
             $user->update(['rfid_uid' => $cleanUid]);
 
             if (Schema::hasTable('bank_warga_rekening')) {
-                BankWargaRekening::where('user_id', $user->id)->update(['rfid_uid' => $cleanUid]);
+                BankWargaRekening::where('id_user', $user->id)->update(['rfid_uid' => $cleanUid]);
             }
 
             Cache::forget('latest_rfid_scan');
@@ -217,7 +217,7 @@ class RfidController extends Controller
             // Lepas kartu
             $user->update(['rfid_uid' => null]);
             if (Schema::hasTable('bank_warga_rekening')) {
-                BankWargaRekening::where('user_id', $user->id)->update(['rfid_uid' => null]);
+                BankWargaRekening::where('id_user', $user->id)->update(['rfid_uid' => null]);
             }
 
             return back()->with('success', "Kartu RFID warga {$user->nama} berhasil dilepas.");
