@@ -40,7 +40,7 @@ class WargaController extends Controller
         $totalWarga = User::where('role', 'Warga')->count();
         $totalWargaRt06 = User::where('role', 'Warga')->where('rt', '06')->count();
         $totalWargaRt07 = User::where('role', 'Warga')->where('rt', '07')->count();
-        $totalKK = User::whereNotNull('no_kk')->where('no_kk', '!=', '')->distinct('no_kk')->count('no_kk');
+        $totalKK = User::whereNotNull('no_kk')->where('no_kk', '!=', '')->distinct()->count('no_kk');
 
         return view('warga.index', compact('wargaList', 'totalWarga', 'totalWargaRt06', 'totalWargaRt07', 'totalKK'));
     }
