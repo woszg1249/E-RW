@@ -90,6 +90,7 @@
                             <th>No</th>
                             <th>Nama Lengkap</th>
                             <th>NIK / No KK</th>
+                            <th>Kartu RFID / e-KTP</th>
                             <th>L/P</th>
                             <th>Alamat & Wilayah RT</th>
                             <th>No HP</th>
@@ -123,6 +124,42 @@
                                 <td class="small">
                                     <div><strong>NIK:</strong> {{ $w->nik ?? '-' }}</div>
                                     <div class="text-muted"><strong>KK:</strong> {{ $w->no_kk ?? '-' }}</div>
+                                </td>
+                                <td class="small">
+                                    @if(!empty($w->rfid_uid))
+                                        <div class="d-flex align-items-center gap-1">
+                                            <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1 rounded-pill font-monospace" title="Kartu Terdaftar: {{ $w->rfid_uid }}">
+                                                <i class="fa-solid fa-id-card me-1"></i>{{ $w->rfid_uid }}
+                                            </span>
+                                            @if(auth()->user()->isAdmin())
+                                                <button type="button" class="btn btn-sm btn-link text-secondary p-0 btn-rfid-pair" 
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#modalPairRfid"
+                                                    data-user-id="{{ $w->id }}"
+                                                    data-user-nama="{{ $w->nama }}"
+                                                    data-current-uid="{{ $w->rfid_uid }}"
+                                                    title="Ganti / Lepas Kartu RFID">
+                                                    <i class="fa-solid fa-pen small"></i>
+                                                </button>
+                                            @endif
+                                        </div>
+                                    @else
+                                        @if(auth()->user()->isAdmin())
+                                            <button type="button" class="btn btn-outline-primary btn-sm py-0 px-2 rounded-pill btn-rfid-pair" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#modalPairRfid"
+                                                data-user-id="{{ $w->id }}"
+                                                data-user-nama="{{ $w->nama }}"
+                                                data-current-uid=""
+                                                style="font-size: 11px;">
+                                                <i class="fa-solid fa-id-card me-1"></i>Hubungkan
+                                            </button>
+                                        @else
+                                            <span class="badge bg-secondary bg-opacity-10 text-muted border px-2 py-1 rounded-pill">
+                                                Belum Ada
+                                            </span>
+                                        @endif
+                                    @endif
                                 </td>
                                 <td class="small">{{ $w->kelamin === 'Laki-laki' ? 'L' : 'P' }}</td>
                                 <td class="small">
@@ -159,7 +196,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="9" class="text-center text-muted py-4">Belum ada data warga terdaftar.</td>
+                                <td colspan="10" class="text-center text-muted py-4">Belum ada data warga terdaftar.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -362,5 +399,166 @@
         </div>
     </div>
 @endforeach
+
+<!-- Modal Pairing Kartu RFID / e-KTP -->
+<div class="modal fade" id="modalPairRfid" tabindex="-1" aria-labelledby="modalPairRfidLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 rounded-4 shadow">
+            <div class="modal-header border-0 pb-0">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="p-2 bg-primary bg-opacity-10 text-primary rounded-circle">
+                        <i class="fa-solid fa-id-card fs-5"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title fw-bold mb-0" id="modalPairRfidLabel">Hubungkan Kartu RFID</h5>
+                        <small class="text-muted" id="rfidWargaNamaSubtitle">Warga: -</small>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <form id="formPairRfid" method="POST" action="">
+                @csrf
+                <div class="modal-body py-3">
+                    <!-- Sensor Detection Animation Box -->
+                    <div class="border rounded-3 p-3 bg-light text-center mb-3" id="rfidScanStatusBox">
+                        <div class="spinner-grow spinner-grow-sm text-primary mb-2" role="status" id="rfidPulseIcon"></div>
+                        <div class="fw-bold small text-dark" id="rfidStatusText">Menunggu tap kartu di mesin ESP32...</div>
+                        <small class="text-muted d-block" id="rfidStatusSubtext">Tempelkan kartu RFID / e-KTP pada scanner RC522</small>
+                    </div>
+
+                    <!-- Input UID -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">UID Kartu RFID / e-KTP</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white"><i class="fa-solid fa-barcode text-muted"></i></span>
+                            <input type="text" name="rfid_uid" id="inputRfidUid" class="form-control font-monospace" placeholder="Contoh: A1B2C3D4" maxlength="50" style="text-transform: uppercase;">
+                            <button type="button" class="btn btn-outline-secondary" id="btnRefreshScan" title="Cek Scan Terbaru">
+                                <i class="fa-solid fa-arrows-rotate"></i>
+                            </button>
+                        </div>
+                        <div class="form-text small">UID akan terisi otomatis saat kartu ditempelkan ke modul ESP32 RC-522, atau ketik manual.</div>
+                    </div>
+
+                    <div id="rfidCurrentInfo" class="alert alert-info py-2 small mb-0 d-none">
+                        <i class="fa-solid fa-circle-info me-1"></i> Kartu terdaftar saat ini: <strong id="rfidCurrentVal"></strong>
+                    </div>
+                </div>
+
+                <div class="modal-footer border-0 pt-0 d-flex justify-content-between">
+                    <div>
+                        <button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-3 d-none" id="btnUnlinkRfid">
+                            <i class="fa-solid fa-unlink me-1"></i> Lepas Kartu
+                        </button>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-light rounded-pill px-3" data-bs-dismiss="modal">Tutup</button>
+                        <button type="submit" class="btn btn-primary-custom rounded-pill px-4">Simpan Kartu</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const modalEl = document.getElementById('modalPairRfid');
+    if (!modalEl) return;
+
+    const modal = new bootstrap.Modal(modalEl);
+    const form = document.getElementById('formPairRfid');
+    const inputUid = document.getElementById('inputRfidUid');
+    const subtitle = document.getElementById('rfidWargaNamaSubtitle');
+    const currentInfo = document.getElementById('rfidCurrentInfo');
+    const currentVal = document.getElementById('rfidCurrentVal');
+    const btnUnlink = document.getElementById('btnUnlinkRfid');
+    const statusBox = document.getElementById('rfidScanStatusBox');
+    const statusText = document.getElementById('rfidStatusText');
+    const statusSubtext = document.getElementById('rfidStatusSubtext');
+    const pulseIcon = document.getElementById('rfidPulseIcon');
+    const btnRefresh = document.getElementById('btnRefreshScan');
+
+    let pollInterval = null;
+    let activeUserId = null;
+
+    // Saat tombol "Hubungkan" atau edit kartu diklik di tabel
+    document.querySelectorAll('.btn-rfid-pair').forEach(btn => {
+        btn.addEventListener('click', function () {
+            activeUserId = this.dataset.userId;
+            const nama = this.dataset.userNama;
+            const currentUid = this.dataset.currentUid || '';
+
+            form.action = `/warga/${activeUserId}/rfid`;
+            subtitle.textContent = `Warga: ${nama}`;
+            inputUid.value = currentUid;
+
+            if (currentUid) {
+                currentVal.textContent = currentUid;
+                currentInfo.classList.remove('d-none');
+                btnUnlink.classList.remove('d-none');
+            } else {
+                currentInfo.classList.add('d-none');
+                btnUnlink.classList.add('d-none');
+            }
+
+            resetScannerState();
+        });
+    });
+
+    // Unlink button
+    btnUnlink.addEventListener('click', function () {
+        if (confirm('Lepas kartu RFID dari warga ini?')) {
+            inputUid.value = '';
+            form.submit();
+        }
+    });
+
+    // Format auto uppercase
+    inputUid.addEventListener('input', function () {
+        this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    });
+
+    function resetScannerState() {
+        statusBox.className = 'border rounded-3 p-3 bg-light text-center mb-3';
+        pulseIcon.className = 'spinner-grow spinner-grow-sm text-primary mb-2';
+        statusText.textContent = 'Menunggu tap kartu di mesin ESP32...';
+        statusSubtext.textContent = 'Tempelkan kartu RFID / e-KTP pada scanner RC522';
+    }
+
+    function checkLatestScan() {
+        fetch('{{ route("api.iot.rfid.latest") }}')
+            .then(res => res.json())
+            .then(res => {
+                if (res.status === 'available' && res.data && res.data.rfid_uid) {
+                    const detectedUid = res.data.rfid_uid;
+                    if (inputUid.value !== detectedUid) {
+                        inputUid.value = detectedUid;
+                        statusBox.className = 'border border-success rounded-3 p-3 bg-success-subtle text-center mb-3';
+                        pulseIcon.className = 'fa-solid fa-circle-check text-success fs-5 mb-2';
+                        statusText.innerHTML = `Kartu Terdeteksi: <span class="font-monospace fw-bold">${detectedUid}</span>`;
+                        statusSubtext.textContent = `Scan pukul ${res.data.scanned_time || 'baru saja'} dari ${res.data.device_id}`;
+                    }
+                }
+            })
+            .catch(() => {});
+    }
+
+    btnRefresh.addEventListener('click', checkLatestScan);
+
+    // Mulai polling saat modal dibuka, matikan saat modal ditutup
+    modalEl.addEventListener('shown.bs.modal', function () {
+        checkLatestScan();
+        pollInterval = setInterval(checkLatestScan, 1500);
+    });
+
+    modalEl.addEventListener('hidden.bs.modal', function () {
+        if (pollInterval) {
+            clearInterval(pollInterval);
+            pollInterval = null;
+        }
+    });
+});
+</script>
 @endif
 @endsection

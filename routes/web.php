@@ -11,6 +11,7 @@ use App\Http\Controllers\KoperasiController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\PosyanduController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RfidController;
 use App\Http\Controllers\SuratController;
 use App\Http\Controllers\TagihanController;
 use App\Http\Controllers\UmkmController;
@@ -40,6 +41,9 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middl
 // Public IoT Scan Endpoint
 Route::post('/api/iot/koperasi/scan', [KoperasiController::class, 'apiIotScan'])->name('api.iot.koperasi.scan');
 Route::post('/api/iot/bank-warga/tap', [BankWargaController::class, 'apiIotTap'])->name('api.iot.bank_warga.tap');
+Route::post('/api/iot/rfid/tap', [RfidController::class, 'apiTap'])->name('api.iot.rfid.tap');
+Route::post('/api/iot/rfid/pair', [RfidController::class, 'apiPair'])->name('api.iot.rfid.pair');
+Route::get('/api/iot/rfid/latest', [RfidController::class, 'latestScan'])->name('api.iot.rfid.latest');
 
 // Protected Routes (Warga & Admin)
 Route::middleware('auth')->group(function () {
@@ -64,6 +68,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/warga', [WargaController::class, 'store'])->name('warga.store')->middleware('admin');
     Route::put('/warga/{id}', [WargaController::class, 'update'])->name('warga.update')->middleware('admin');
     Route::delete('/warga/{id}', [WargaController::class, 'destroy'])->name('warga.destroy')->middleware('admin');
+    Route::post('/warga/{id}/rfid', [RfidController::class, 'updateRfid'])->name('warga.rfid.update')->middleware('admin');
     Route::get('/kk', [WargaController::class, 'kelolaKK'])->name('warga.kk');
     Route::get('/kk/{no_kk}/cetak', [WargaController::class, 'cetakKK'])->name('warga.kk.cetak');
 
