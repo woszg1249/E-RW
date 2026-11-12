@@ -6,6 +6,14 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Dashboard') - E-RT RW Digital Bersatu</title>
 
+    <!-- Pre-load View Mode Script (Mencegah Glitch/Flicker) -->
+    <script>
+        (function() {
+            var saved = localStorage.getItem('erw_view_mode') || (window.innerWidth <= 768 ? 'phone' : 'desktop');
+            document.documentElement.classList.add(saved === 'phone' ? 'mode-phone' : 'mode-desktop');
+        })();
+    </script>
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -260,13 +268,231 @@
                 padding: 18px;
             }
         }
+
+        /* ===== DESKTOP & PHONE MODE SWITCHER STYLES ===== */
+        .view-mode-switcher {
+            display: inline-flex;
+            background: #f1f5f9;
+            padding: 3px;
+            border-radius: 999px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .view-mode-switcher .btn-mode {
+            border: none;
+            background: transparent;
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: #64748b;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+        }
+
+        .view-mode-switcher .btn-mode.active {
+            background: #ffffff;
+            color: var(--primary);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+        }
+
+        /* Floating Mode Switcher Button di pojok kanan bawah */
+        .floating-mode-badge {
+            position: fixed;
+            bottom: 22px;
+            right: 22px;
+            z-index: 1060;
+            background: rgba(15, 23, 42, 0.92);
+            backdrop-filter: blur(8px);
+            padding: 5px 8px;
+            border-radius: 999px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.3s;
+        }
+
+        .floating-mode-badge .btn-float {
+            border: none;
+            background: transparent;
+            color: #94a3b8;
+            font-size: 0.74rem;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 999px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .floating-mode-badge .btn-float.active {
+            background: var(--primary);
+            color: #ffffff;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+        }
+
+        /* Bottom Navigation Bar untuk Phone Mode */
+        #mobileBottomNav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #ffffff;
+            border-top: 1px solid #e2e8f0;
+            z-index: 1050;
+            padding: 6px 12px;
+            box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.06);
+        }
+
+        #mobileBottomNav .nav-mobile-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: #64748b;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 4px 6px;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        #mobileBottomNav .nav-mobile-item.active,
+        #mobileBottomNav .nav-mobile-item:hover {
+            color: var(--primary);
+        }
+
+        #mobileBottomNav .nav-mobile-item i {
+            font-size: 1.15rem;
+            margin-bottom: 2px;
+        }
+
+        /* ===== ATURAN KHUSUS KETIKA MODE PHONE DIAKTIFKAN (body.mode-phone) ===== */
+        body.mode-phone {
+            background: #0f172a !important;
+            padding-bottom: 70px;
+        }
+
+        body.mode-phone #app-shell-container {
+            max-width: 480px;
+            margin: 20px auto;
+            background: #ffffff;
+            min-height: calc(100vh - 40px);
+            border-radius: 36px;
+            overflow: hidden;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5), 0 0 0 10px #1e293b;
+            position: relative;
+        }
+
+        /* Notch / Status Bar Mockup untuk Phone Mode di layar lebar */
+        body.mode-phone .phone-notch-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 24px 6px;
+            background: #ffffff;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #475569;
+            position: sticky;
+            top: 0;
+            z-index: 1040;
+        }
+
+        body.mode-phone #sidebar {
+            display: none !important;
+        }
+
+        body.mode-phone #content-wrapper {
+            margin-left: 0 !important;
+        }
+
+        body.mode-phone .top-navbar {
+            padding: 10px 16px;
+        }
+
+        body.mode-phone .page-content {
+            padding: 16px 14px 80px 14px;
+        }
+
+        body.mode-phone #mobileBottomNav {
+            display: flex !important;
+            justify-content: space-around;
+            max-width: 480px;
+            margin: 0 auto;
+            left: 0;
+            right: 0;
+            border-radius: 0 0 26px 26px;
+        }
+
+        /* Jika di layar HP sungguhan (width <= 576px), hilangkan frame mockup agar full width */
+        @media (max-width: 576px) {
+            body.mode-phone {
+                background: var(--body-bg) !important;
+                padding-bottom: 65px;
+            }
+            body.mode-phone #app-shell-container {
+                max-width: 100%;
+                margin: 0;
+                border-radius: 0;
+                box-shadow: none;
+                border: none;
+            }
+            body.mode-phone .phone-notch-bar {
+                display: none;
+            }
+            body.mode-phone #mobileBottomNav {
+                border-radius: 0;
+                max-width: 100%;
+            }
+        }
+
+        /* ===== ATURAN KHUSUS KETIKA MODE DESKTOP DIAKTIFKAN (body.mode-desktop) ===== */
+        body.mode-desktop {
+            background-color: var(--body-bg) !important;
+        }
+
+        /* Jika diakses dari HP / layar kecil saat Mode Desktop aktif: paksa desktop canvas */
+        @media (max-width: 991.98px) {
+            body.mode-desktop {
+                min-width: 1100px !important;
+                overflow-x: auto !important;
+            }
+            body.mode-desktop #sidebar {
+                margin-left: 0 !important;
+                position: fixed !important;
+                width: var(--sidebar-width) !important;
+                display: flex !important;
+            }
+            body.mode-desktop #content-wrapper {
+                margin-left: var(--sidebar-width) !important;
+                min-width: calc(1100px - var(--sidebar-width)) !important;
+            }
+            body.mode-desktop #mobileBottomNav {
+                display: none !important;
+            }
+        }
     </style>
     @yield('styles')
 </head>
 <body>
 
-    <!-- Sidebar -->
-    <nav id="sidebar">
+    <div id="app-shell-container">
+        <!-- Mockup Status Bar untuk Phone Mode di layar lebar -->
+        <div class="phone-notch-bar">
+            <span><i class="fa-solid fa-signal me-1"></i> E-RW 5G</span>
+            <span><i class="fa-solid fa-mobile-screen me-1 text-success"></i> Mode Smartphone</span>
+            <span><i class="fa-solid fa-wifi me-1"></i> 100% <i class="fa-solid fa-battery-full ms-1 text-success"></i></span>
+        </div>
+
+        <!-- Sidebar -->
+        <nav id="sidebar">
         <div class="sidebar-brand">
             <img src="{{ asset('img/logo_ert_rw.svg') }}" alt="Logo RT RW Digital">
             <div>
@@ -376,7 +602,17 @@
                 </div>
             </div>
 
-            <div class="d-flex align-items-center gap-3">
+            <div class="d-flex align-items-center gap-2">
+                <!-- Desktop & Phone Mode Switcher di Top Navbar -->
+                <div class="view-mode-switcher me-1">
+                    <button type="button" class="btn-mode btn-mode-desktop" onclick="setViewMode('desktop')" title="Beralih ke Mode Desktop (Layar Penuh Komputer)">
+                        <i class="fa-solid fa-desktop"></i> <span class="d-none d-sm-inline">Desktop</span>
+                    </button>
+                    <button type="button" class="btn-mode btn-mode-phone" onclick="setViewMode('phone')" title="Beralih ke Mode Phone (Layar Smartphone)">
+                        <i class="fa-solid fa-mobile-screen-button"></i> <span class="d-none d-sm-inline">Phone</span>
+                    </button>
+                </div>
+
                 <!-- User Profile Dropdown -->
                 <div class="dropdown">
                     <div class="user-pill dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
@@ -464,25 +700,184 @@
             &copy; {{ date('Y') }} <strong>E-RT RW Digital Bersatu</strong> • Dikembangkan dengan Laravel Framework &bull; Wilayah RW 19 (RT 06 & RT 07)
         </footer>
     </div>
+    <!-- End of #content-wrapper -->
+
+    <!-- Mobile Bottom Navigation Bar (Phone Mode) -->
+    <nav id="mobileBottomNav">
+        <a href="{{ route('dashboard') }}" class="nav-mobile-item {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+            <i class="fa-solid fa-house"></i>
+            <span>Beranda</span>
+        </a>
+        <a href="{{ route('warga.kk') }}" class="nav-mobile-item {{ request()->routeIs('warga.kk*') ? 'active' : '' }}">
+            <i class="fa-solid fa-address-card"></i>
+            <span>KK Saya</span>
+        </a>
+        <a href="{{ route('tagihan.index') }}" class="nav-mobile-item {{ request()->routeIs('tagihan.index') ? 'active' : '' }}">
+            <i class="fa-solid fa-receipt"></i>
+            <span>Iuran</span>
+        </a>
+        <a href="{{ route('bank-warga.index') }}" class="nav-mobile-item {{ request()->routeIs('bank-warga.index') ? 'active' : '' }}">
+            <i class="fa-solid fa-building-columns"></i>
+            <span>Bank Warga</span>
+        </a>
+        <button type="button" class="nav-mobile-item border-0 bg-transparent" data-bs-toggle="offcanvas" data-bs-target="#offcanvasMobileMenu">
+            <i class="fa-solid fa-bars-staggered"></i>
+            <span>Lainnya</span>
+        </button>
+    </nav>
+
+    <!-- Offcanvas Mobile Drawer Menu (Phone Mode) -->
+    <div class="offcanvas offcanvas-bottom rounded-top-4" tabindex="-1" id="offcanvasMobileMenu" style="max-height: 85vh; max-width: 480px; margin: 0 auto; left: 0; right: 0;">
+        <div class="offcanvas-header border-bottom py-3">
+            <div class="d-flex align-items-center gap-2">
+                <img src="{{ asset('img/logo_ert_rw.svg') }}" alt="Logo" style="width: 32px; height: 32px;">
+                <div>
+                    <h6 class="offcanvas-title fw-bold mb-0">Menu Layanan Warga</h6>
+                    <small class="text-muted" style="font-size: 0.72rem;">RW 19 (RT 06 & RT 07) Bekasi Jaya</small>
+                </div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body p-3">
+            <div class="row g-2 mb-3">
+                <div class="col-4">
+                    <a href="{{ route('surat.index') }}" class="p-3 bg-light rounded-3 text-center d-block text-decoration-none text-dark border">
+                        <i class="fa-solid fa-envelope-open-text fs-4 text-primary mb-1 d-block"></i>
+                        <span class="small fw-semibold" style="font-size: 0.75rem;">Surat Pengantar</span>
+                    </a>
+                </div>
+                <div class="col-4">
+                    <a href="{{ route('bank-sampah.index') }}" class="p-3 bg-light rounded-3 text-center d-block text-decoration-none text-dark border">
+                        <i class="fa-solid fa-recycle fs-4 text-success mb-1 d-block"></i>
+                        <span class="small fw-semibold" style="font-size: 0.75rem;">Bank Sampah</span>
+                    </a>
+                </div>
+                <div class="col-4">
+                    <a href="{{ route('posyandu.index') }}" class="p-3 bg-light rounded-3 text-center d-block text-decoration-none text-dark border">
+                        <i class="fa-solid fa-baby fs-4 text-danger mb-1 d-block"></i>
+                        <span class="small fw-semibold" style="font-size: 0.75rem;">Posyandu Balita</span>
+                    </a>
+                </div>
+                <div class="col-4">
+                    <a href="{{ route('koperasi.index') }}" class="p-3 bg-light rounded-3 text-center d-block text-decoration-none text-dark border">
+                        <i class="fa-solid fa-hand-holding-dollar fs-4 text-warning mb-1 d-block"></i>
+                        <span class="small fw-semibold" style="font-size: 0.75rem;">Koperasi & IoT</span>
+                    </a>
+                </div>
+                <div class="col-4">
+                    <a href="{{ route('umkm.index') }}" class="p-3 bg-light rounded-3 text-center d-block text-decoration-none text-dark border">
+                        <i class="fa-solid fa-store fs-4 text-info mb-1 d-block"></i>
+                        <span class="small fw-semibold" style="font-size: 0.75rem;">UMKM Warga</span>
+                    </a>
+                </div>
+                <div class="col-4">
+                    <a href="{{ route('aset.index') }}" class="p-3 bg-light rounded-3 text-center d-block text-decoration-none text-dark border">
+                        <i class="fa-solid fa-boxes-stacked fs-4 text-secondary mb-1 d-block"></i>
+                        <span class="small fw-semibold" style="font-size: 0.75rem;">Inventaris Aset</span>
+                    </a>
+                </div>
+                <div class="col-4">
+                    <a href="{{ route('kegiatan.index') }}" class="p-3 bg-light rounded-3 text-center d-block text-decoration-none text-dark border">
+                        <i class="fa-solid fa-calendar-check fs-4 text-primary mb-1 d-block"></i>
+                        <span class="small fw-semibold" style="font-size: 0.75rem;">Kegiatan</span>
+                    </a>
+                </div>
+                <div class="col-4">
+                    <a href="{{ route('keuangan.laporan') }}" class="p-3 bg-light rounded-3 text-center d-block text-decoration-none text-dark border">
+                        <i class="fa-solid fa-file-invoice-dollar fs-4 text-success mb-1 d-block"></i>
+                        <span class="small fw-semibold" style="font-size: 0.75rem;">Laporan Kas</span>
+                    </a>
+                </div>
+                <div class="col-4">
+                    <a href="{{ route('panduan') }}" class="p-3 bg-light rounded-3 text-center d-block text-decoration-none text-dark border">
+                        <i class="fa-solid fa-book-open-reader fs-4 text-primary mb-1 d-block"></i>
+                        <span class="small fw-semibold" style="font-size: 0.75rem;">Panduan App</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="border-top pt-2">
+                <a href="{{ route('profil.index') }}" class="d-flex align-items-center gap-2 p-2 text-decoration-none text-dark rounded-3 hover-bg">
+                    <i class="fa-solid fa-user-gear text-secondary"></i>
+                    <span class="small fw-semibold">Pengaturan Profil Akun</span>
+                </a>
+                <form action="{{ route('logout') }}" method="POST">
+                    @csrf
+                    <button type="submit" class="btn btn-outline-danger w-100 rounded-pill mt-2 py-2 small fw-bold">
+                        <i class="fa-solid fa-arrow-right-from-bracket me-1"></i> Keluar (Logout)
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    </div>
+    <!-- End of #app-shell-container -->
+
+    <!-- Floating Mode Switcher Button (Pojok Kanan Bawah) -->
+    <div class="floating-mode-badge shadow" title="Ganti Mode Tampilan Aplikasi">
+        <button type="button" class="btn-float btn-mode-desktop" id="btnFloatDesktop" onclick="setViewMode('desktop')" title="Beralih ke Tampilan Desktop Penuh">
+            <i class="fa-solid fa-desktop me-1"></i> Desktop
+        </button>
+        <button type="button" class="btn-float btn-mode-phone" id="btnFloatPhone" onclick="setViewMode('phone')" title="Beralih ke Tampilan Smartphone / HP">
+            <i class="fa-solid fa-mobile-screen-button me-1"></i> Phone
+        </button>
+    </div>
 
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!-- Sidebar Toggle Script -->
+    <!-- Desktop & Phone Mode Script -->
     <script>
+        function setViewMode(mode) {
+            localStorage.setItem('erw_view_mode', mode);
+            applyViewMode(mode);
+        }
+
+        function applyViewMode(mode) {
+            const body = document.body;
+            body.classList.remove('mode-desktop', 'mode-phone');
+            body.classList.add(mode === 'phone' ? 'mode-phone' : 'mode-desktop');
+
+            // Toggle active state di seluruh tombol switch
+            document.querySelectorAll('.btn-mode-desktop, #btnFloatDesktop').forEach(function(el) {
+                el.classList.toggle('active', mode === 'desktop');
+            });
+            document.querySelectorAll('.btn-mode-phone, #btnFloatPhone').forEach(function(el) {
+                el.classList.toggle('active', mode === 'phone');
+            });
+
+            // Sesuaikan meta viewport untuk mode desktop di smartphone
+            var metaVp = document.querySelector('meta[name="viewport"]');
+            if (metaVp) {
+                if (mode === 'desktop' && window.innerWidth <= 768) {
+                    metaVp.setAttribute('content', 'width=1100, initial-scale=0.35, maximum-scale=2.0, user-scalable=yes');
+                } else {
+                    metaVp.setAttribute('content', 'width=device-width, initial-scale=1.0');
+                }
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', function () {
+            // Inisialisasi Mode Tampilan Tersimpan
+            var currentMode = localStorage.getItem('erw_view_mode') || (window.innerWidth <= 768 ? 'phone' : 'desktop');
+            applyViewMode(currentMode);
+
+            // Sidebar Toggle Script
             const sidebar = document.getElementById('sidebar');
             const content = document.getElementById('content-wrapper');
             const toggleBtn = document.getElementById('sidebarToggle');
 
-            toggleBtn.addEventListener('click', function () {
-                if (window.innerWidth <= 992) {
-                    sidebar.classList.toggle('show-mobile');
-                } else {
-                    sidebar.classList.toggle('collapsed');
-                    content.classList.toggle('expanded');
-                }
-            });
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', function () {
+                    if (window.innerWidth <= 992) {
+                        sidebar.classList.toggle('show-mobile');
+                    } else {
+                        sidebar.classList.toggle('collapsed');
+                        content.classList.toggle('expanded');
+                    }
+                });
+            }
         });
     </script>
 

@@ -6,6 +6,15 @@
     <title>E-RT RW Bersatu - Portal Resmi RW 19 Bekasi Jaya</title>
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="{{ asset('img/logo_ert_rw.svg') }}">
+
+    <!-- Pre-load View Mode Script -->
+    <script>
+        (function() {
+            var saved = localStorage.getItem('erw_view_mode') || (window.innerWidth <= 768 ? 'phone' : 'desktop');
+            document.documentElement.classList.add(saved === 'phone' ? 'mode-phone' : 'mode-desktop');
+        })();
+    </script>
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -243,33 +252,175 @@
         .footer-landing a:hover {
             color: #10b981;
         }
+
+        /* ===== DESKTOP & PHONE MODE SWITCHER STYLES ===== */
+        .view-mode-switcher {
+            display: inline-flex;
+            background: #f1f5f9;
+            padding: 3px;
+            border-radius: 999px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .view-mode-switcher .btn-mode {
+            border: none;
+            background: transparent;
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: #64748b;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+        }
+
+        .view-mode-switcher .btn-mode.active {
+            background: #ffffff;
+            color: var(--primary);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+        }
+
+        .floating-mode-badge {
+            position: fixed;
+            bottom: 22px;
+            right: 22px;
+            z-index: 1060;
+            background: rgba(15, 23, 42, 0.92);
+            backdrop-filter: blur(8px);
+            padding: 5px 8px;
+            border-radius: 999px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.3s;
+        }
+
+        .floating-mode-badge .btn-float {
+            border: none;
+            background: transparent;
+            color: #94a3b8;
+            font-size: 0.74rem;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 999px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .floating-mode-badge .btn-float.active {
+            background: var(--primary);
+            color: #ffffff;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+        }
+
+        /* Mode Phone untuk Landing Page */
+        body.mode-phone {
+            background: #0f172a !important;
+        }
+
+        body.mode-phone #landing-shell-container {
+            max-width: 480px;
+            margin: 20px auto;
+            background: #ffffff;
+            min-height: calc(100vh - 40px);
+            border-radius: 36px;
+            overflow-x: hidden;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5), 0 0 0 10px #1e293b;
+            position: relative;
+        }
+
+        body.mode-phone .phone-notch-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 24px 6px;
+            background: #ffffff;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #475569;
+            position: sticky;
+            top: 0;
+            z-index: 1040;
+        }
+
+        body.mode-phone .hero-title {
+            font-size: 2rem !important;
+        }
+
+        @media (max-width: 576px) {
+            body.mode-phone {
+                background: #ffffff !important;
+            }
+            body.mode-phone #landing-shell-container {
+                max-width: 100%;
+                margin: 0;
+                border-radius: 0;
+                box-shadow: none;
+                border: none;
+            }
+            body.mode-phone .phone-notch-bar {
+                display: none;
+            }
+        }
+
+        /* Mode Desktop untuk HP */
+        @media (max-width: 991.98px) {
+            body.mode-desktop {
+                min-width: 1100px !important;
+                overflow-x: auto !important;
+            }
+        }
     </style>
 </head>
 <body>
 
-    <!-- Top Navbar -->
-    <nav class="navbar navbar-expand-lg landing-nav sticky-top">
-        <div class="container">
-            <a class="navbar-brand d-flex align-items-center gap-2" href="{{ route('landing') }}">
-                <img src="{{ asset('img/logo_ert_rw.svg') }}" alt="Logo RT RW" style="width: 42px; height: 42px;">
-                <div>
-                    <span class="fw-bold fs-5 text-dark d-block lh-1">E-RT RW BERSATU</span>
-                    <small class="text-muted fw-semibold" style="font-size: 0.72rem;">RW 19 (RT 06 & RT 07) BEKASI JAYA</small>
-                </div>
-            </a>
-            <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navMenu">
-                <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
-                    <li class="nav-item"><a class="nav-link" href="#beranda">Beranda</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#layanan">Layanan & Fitur</a></li>
-                    <li class="nav-item"><a class="nav-link text-primary fw-bold" href="#panduan"><i class="fa-solid fa-book-open-reader me-1"></i> Panduan Penggunaan</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#tentang">Tentang RW 19</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#kontak">Kontak</a></li>
-                </ul>
-                <div class="d-flex align-items-center gap-2">
-                    @auth
+    <div id="landing-shell-container">
+        <!-- Mockup Status Bar untuk Phone Mode di Layar Lebar -->
+        <div class="phone-notch-bar">
+            <span><i class="fa-solid fa-signal me-1"></i> E-RW 5G</span>
+            <span><i class="fa-solid fa-mobile-screen me-1 text-success"></i> Phone Mode</span>
+            <span><i class="fa-solid fa-wifi me-1"></i> 100% <i class="fa-solid fa-battery-full ms-1 text-success"></i></span>
+        </div>
+
+        <!-- Top Navbar -->
+        <nav class="navbar navbar-expand-lg landing-nav sticky-top">
+            <div class="container">
+                <a class="navbar-brand d-flex align-items-center gap-2" href="{{ route('landing') }}">
+                    <img src="{{ asset('img/logo_ert_rw.svg') }}" alt="Logo RT RW" style="width: 42px; height: 42px;">
+                    <div>
+                        <span class="fw-bold fs-5 text-dark d-block lh-1">E-RT RW BERSATU</span>
+                        <small class="text-muted fw-semibold" style="font-size: 0.72rem;">RW 19 (RT 06 & RT 07) BEKASI JAYA</small>
+                    </div>
+                </a>
+                <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navMenu">
+                    <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
+                        <li class="nav-item"><a class="nav-link" href="#beranda">Beranda</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#layanan">Layanan & Fitur</a></li>
+                        <li class="nav-item"><a class="nav-link text-primary fw-bold" href="#panduan"><i class="fa-solid fa-book-open-reader me-1"></i> Panduan Penggunaan</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#tentang">Tentang RW 19</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#kontak">Kontak</a></li>
+                    </ul>
+                    <div class="d-flex align-items-center gap-2">
+                        <!-- Desktop & Phone Mode Switcher di Navbar -->
+                        <div class="view-mode-switcher me-1">
+                            <button type="button" class="btn-mode btn-mode-desktop" onclick="setViewMode('desktop')" title="Mode Desktop (Layar Lebar)">
+                                <i class="fa-solid fa-desktop"></i> <span class="d-none d-sm-inline">Desktop</span>
+                            </button>
+                            <button type="button" class="btn-mode btn-mode-phone" onclick="setViewMode('phone')" title="Mode Phone (Layar HP)">
+                                <i class="fa-solid fa-mobile-screen-button"></i> <span class="d-none d-sm-inline">Phone</span>
+                            </button>
+                        </div>
+
+                        @auth
                         <a href="{{ route('dashboard') }}" class="btn btn-hero-primary py-2 px-3 small">
                             <i class="fa-solid fa-gauge-high"></i> Menuju Dashboard
                         </a>
@@ -923,7 +1074,57 @@
         </div>
     </footer>
 
+    </div>
+    <!-- End of #landing-shell-container -->
+
+    <!-- Floating Mode Switcher Button (Pojok Kanan Bawah) -->
+    <div class="floating-mode-badge shadow" title="Ganti Mode Tampilan Halaman">
+        <button type="button" class="btn-float btn-mode-desktop" id="btnFloatDesktop" onclick="setViewMode('desktop')" title="Beralih ke Tampilan Desktop">
+            <i class="fa-solid fa-desktop me-1"></i> Desktop
+        </button>
+        <button type="button" class="btn-float btn-mode-phone" id="btnFloatPhone" onclick="setViewMode('phone')" title="Beralih ke Tampilan Phone / HP">
+            <i class="fa-solid fa-mobile-screen-button me-1"></i> Phone
+        </button>
+    </div>
+
     <!-- Bootstrap 5 JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Desktop & Phone Mode Script -->
+    <script>
+        function setViewMode(mode) {
+            localStorage.setItem('erw_view_mode', mode);
+            applyViewMode(mode);
+        }
+
+        function applyViewMode(mode) {
+            const body = document.body;
+            body.classList.remove('mode-desktop', 'mode-phone');
+            body.classList.add(mode === 'phone' ? 'mode-phone' : 'mode-desktop');
+
+            // Toggle active state di seluruh tombol switch
+            document.querySelectorAll('.btn-mode-desktop, #btnFloatDesktop').forEach(function(el) {
+                el.classList.toggle('active', mode === 'desktop');
+            });
+            document.querySelectorAll('.btn-mode-phone, #btnFloatPhone').forEach(function(el) {
+                el.classList.toggle('active', mode === 'phone');
+            });
+
+            // Sesuaikan meta viewport
+            var metaVp = document.querySelector('meta[name="viewport"]');
+            if (metaVp) {
+                if (mode === 'desktop' && window.innerWidth <= 768) {
+                    metaVp.setAttribute('content', 'width=1100, initial-scale=0.35, maximum-scale=2.0, user-scalable=yes');
+                } else {
+                    metaVp.setAttribute('content', 'width=device-width, initial-scale=1.0');
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            var currentMode = localStorage.getItem('erw_view_mode') || (window.innerWidth <= 768 ? 'phone' : 'desktop');
+            applyViewMode(currentMode);
+        });
+    </script>
 </body>
 </html>
