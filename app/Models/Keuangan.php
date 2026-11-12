@@ -17,6 +17,16 @@ class Keuangan extends Model
         'tanggal',
     ];
 
+    public function setJumlahAttribute($value)
+    {
+        $this->attributes['jumlah'] = abs((float) $value);
+    }
+
+    public function getJumlahAttribute($value)
+    {
+        return abs((float) $value);
+    }
+
     public function bukti()
     {
         return $this->hasMany(BuktiKas::class, 'id_keuangan');

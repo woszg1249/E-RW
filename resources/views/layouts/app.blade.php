@@ -6,10 +6,10 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Dashboard') - E-RT RW Digital Bersatu</title>
 
-    <!-- Pre-load View Mode Script (Mencegah Glitch/Flicker) -->
+    <!-- Pre-load View Mode Script -->
     <script>
         (function() {
-            var saved = localStorage.getItem('erw_view_mode') || (window.innerWidth <= 768 ? 'phone' : 'desktop');
+            var saved = localStorage.getItem('erw_view_mode') || 'desktop';
             document.documentElement.classList.add(saved === 'phone' ? 'mode-phone' : 'mode-desktop');
         })();
     </script>
@@ -299,42 +299,6 @@
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
         }
 
-        /* Floating Mode Switcher Button di pojok kanan bawah */
-        .floating-mode-badge {
-            position: fixed;
-            bottom: 22px;
-            right: 22px;
-            z-index: 1060;
-            background: rgba(15, 23, 42, 0.92);
-            backdrop-filter: blur(8px);
-            padding: 5px 8px;
-            border-radius: 999px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            transition: all 0.3s;
-        }
-
-        .floating-mode-badge .btn-float {
-            border: none;
-            background: transparent;
-            color: #94a3b8;
-            font-size: 0.74rem;
-            font-weight: 700;
-            padding: 4px 10px;
-            border-radius: 999px;
-            transition: all 0.2s;
-            cursor: pointer;
-        }
-
-        .floating-mode-badge .btn-float.active {
-            background: var(--primary);
-            color: #ffffff;
-            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
-        }
-
         /* Bottom Navigation Bar untuk Phone Mode */
         #mobileBottomNav {
             display: none;
@@ -372,41 +336,18 @@
             margin-bottom: 2px;
         }
 
-        /* ===== ATURAN KHUSUS KETIKA MODE PHONE DIAKTIFKAN (body.mode-phone) ===== */
+        /* ===== ATURAN KETIKA MODE PHONE DIAKTIFKAN ===== */
         body.mode-phone {
-            background: #0f172a !important;
-            padding-bottom: 70px;
-        }
-
-        body.mode-phone #app-shell-container {
-            max-width: 480px;
-            margin: 20px auto;
-            background: #ffffff;
-            min-height: calc(100vh - 40px);
-            border-radius: 36px;
-            overflow: hidden;
-            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5), 0 0 0 10px #1e293b;
-            position: relative;
-        }
-
-        /* Notch / Status Bar Mockup untuk Phone Mode di layar lebar */
-        body.mode-phone .phone-notch-bar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 8px 24px 6px;
-            background: #ffffff;
-            border-bottom: 1px solid #f1f5f9;
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: #475569;
-            position: sticky;
-            top: 0;
-            z-index: 1040;
+            padding-bottom: 65px;
         }
 
         body.mode-phone #sidebar {
-            display: none !important;
+            margin-left: calc(-1 * var(--sidebar-width));
+        }
+
+        body.mode-phone #sidebar.show-mobile {
+            margin-left: 0 !important;
+            display: flex !important;
         }
 
         body.mode-phone #content-wrapper {
@@ -414,54 +355,32 @@
         }
 
         body.mode-phone .top-navbar {
-            padding: 10px 16px;
+            padding: 12px 18px;
         }
 
         body.mode-phone .page-content {
-            padding: 16px 14px 80px 14px;
+            padding: 16px 16px 70px 16px;
         }
 
         body.mode-phone #mobileBottomNav {
             display: flex !important;
             justify-content: space-around;
-            max-width: 480px;
-            margin: 0 auto;
-            left: 0;
-            right: 0;
-            border-radius: 0 0 26px 26px;
         }
 
-        /* Jika di layar HP sungguhan (width <= 576px), hilangkan frame mockup agar full width */
-        @media (max-width: 576px) {
-            body.mode-phone {
-                background: var(--body-bg) !important;
-                padding-bottom: 65px;
-            }
-            body.mode-phone #app-shell-container {
-                max-width: 100%;
-                margin: 0;
-                border-radius: 0;
-                box-shadow: none;
-                border: none;
-            }
-            body.mode-phone .phone-notch-bar {
-                display: none;
-            }
-            body.mode-phone #mobileBottomNav {
-                border-radius: 0;
-                max-width: 100%;
-            }
-        }
-
-        /* ===== ATURAN KHUSUS KETIKA MODE DESKTOP DIAKTIFKAN (body.mode-desktop) ===== */
+        /* ===== ATURAN KETIKA MODE DESKTOP DIAKTIFKAN ===== */
         body.mode-desktop {
             background-color: var(--body-bg) !important;
+            padding-bottom: 0;
         }
 
-        /* Jika diakses dari HP / layar kecil saat Mode Desktop aktif: paksa desktop canvas */
+        body.mode-desktop #mobileBottomNav {
+            display: none !important;
+        }
+
+        /* Jika diakses dari HP saat Mode Desktop dipilih: paksa canvas lebar desktop */
         @media (max-width: 991.98px) {
             body.mode-desktop {
-                min-width: 1100px !important;
+                min-width: 1050px !important;
                 overflow-x: auto !important;
             }
             body.mode-desktop #sidebar {
@@ -472,24 +391,13 @@
             }
             body.mode-desktop #content-wrapper {
                 margin-left: var(--sidebar-width) !important;
-                min-width: calc(1100px - var(--sidebar-width)) !important;
-            }
-            body.mode-desktop #mobileBottomNav {
-                display: none !important;
+                min-width: calc(1050px - var(--sidebar-width)) !important;
             }
         }
     </style>
     @yield('styles')
 </head>
 <body>
-
-    <div id="app-shell-container">
-        <!-- Mockup Status Bar untuk Phone Mode di layar lebar -->
-        <div class="phone-notch-bar">
-            <span><i class="fa-solid fa-signal me-1"></i> E-RW 5G</span>
-            <span><i class="fa-solid fa-mobile-screen me-1 text-success"></i> Mode Smartphone</span>
-            <span><i class="fa-solid fa-wifi me-1"></i> 100% <i class="fa-solid fa-battery-full ms-1 text-success"></i></span>
-        </div>
 
         <!-- Sidebar -->
         <nav id="sidebar">
@@ -811,19 +719,6 @@
         </div>
     </div>
 
-    </div>
-    <!-- End of #app-shell-container -->
-
-    <!-- Floating Mode Switcher Button (Pojok Kanan Bawah) -->
-    <div class="floating-mode-badge shadow" title="Ganti Mode Tampilan Aplikasi">
-        <button type="button" class="btn-float btn-mode-desktop" id="btnFloatDesktop" onclick="setViewMode('desktop')" title="Beralih ke Tampilan Desktop Penuh">
-            <i class="fa-solid fa-desktop me-1"></i> Desktop
-        </button>
-        <button type="button" class="btn-float btn-mode-phone" id="btnFloatPhone" onclick="setViewMode('phone')" title="Beralih ke Tampilan Smartphone / HP">
-            <i class="fa-solid fa-mobile-screen-button me-1"></i> Phone
-        </button>
-    </div>
-
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
@@ -839,15 +734,15 @@
             body.classList.remove('mode-desktop', 'mode-phone');
             body.classList.add(mode === 'phone' ? 'mode-phone' : 'mode-desktop');
 
-            // Toggle active state di seluruh tombol switch
-            document.querySelectorAll('.btn-mode-desktop, #btnFloatDesktop').forEach(function(el) {
+            // Toggle active state di tombol switch top navbar
+            document.querySelectorAll('.btn-mode-desktop').forEach(function(el) {
                 el.classList.toggle('active', mode === 'desktop');
             });
-            document.querySelectorAll('.btn-mode-phone, #btnFloatPhone').forEach(function(el) {
+            document.querySelectorAll('.btn-mode-phone').forEach(function(el) {
                 el.classList.toggle('active', mode === 'phone');
             });
 
-            // Sesuaikan meta viewport untuk mode desktop di smartphone
+            // Sesuaikan meta viewport
             var metaVp = document.querySelector('meta[name="viewport"]');
             if (metaVp) {
                 if (mode === 'desktop' && window.innerWidth <= 768) {
@@ -859,8 +754,8 @@
         }
 
         document.addEventListener('DOMContentLoaded', function () {
-            // Inisialisasi Mode Tampilan Tersimpan
-            var currentMode = localStorage.getItem('erw_view_mode') || (window.innerWidth <= 768 ? 'phone' : 'desktop');
+            // Inisialisasi Mode Tampilan Tersimpan (Default: Desktop)
+            var currentMode = localStorage.getItem('erw_view_mode') || 'desktop';
             applyViewMode(currentMode);
 
             // Sidebar Toggle Script

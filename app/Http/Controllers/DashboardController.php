@@ -23,8 +23,8 @@ class DashboardController extends Controller
         $user = Auth::user();
 
         // 1. Keuangan Kas RT
-        $totalMasuk = Keuangan::where('jenis', 'masuk')->sum('jumlah') ?? 0;
-        $totalKeluar = Keuangan::where('jenis', 'keluar')->sum('jumlah') ?? 0;
+        $totalMasuk = (float) (Keuangan::where('jenis', 'masuk')->sum(DB::raw('ABS(jumlah)')) ?? 0);
+        $totalKeluar = (float) (Keuangan::where('jenis', 'keluar')->sum(DB::raw('ABS(jumlah)')) ?? 0);
         $saldoKas = $totalMasuk - $totalKeluar;
 
         // 2. Kependudukan
@@ -74,12 +74,12 @@ class DashboardController extends Controller
             $masuk = Keuangan::where('jenis', 'masuk')
                 ->whereMonth('tanggal', $bln)
                 ->whereYear('tanggal', $thn)
-                ->sum('jumlah') ?? 0;
+                ->sum(DB::raw('ABS(jumlah)')) ?? 0;
 
             $keluar = Keuangan::where('jenis', 'keluar')
                 ->whereMonth('tanggal', $bln)
                 ->whereYear('tanggal', $thn)
-                ->sum('jumlah') ?? 0;
+                ->sum(DB::raw('ABS(jumlah)')) ?? 0;
 
             $bulanList[] = $namaBulan;
             $grafikMasuk[] = (int) $masuk;

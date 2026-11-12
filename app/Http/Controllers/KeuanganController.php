@@ -40,8 +40,8 @@ class KeuanganController extends Controller
 
         $transaksi = $query->paginate(15)->withQueryString();
 
-        $totalMasuk = Keuangan::where('jenis', 'masuk')->sum('jumlah') ?? 0;
-        $totalKeluar = Keuangan::where('jenis', 'keluar')->sum('jumlah') ?? 0;
+        $totalMasuk = (float) (Keuangan::where('jenis', 'masuk')->sum(\Illuminate\Support\Facades\DB::raw('ABS(jumlah)')) ?? 0);
+        $totalKeluar = (float) (Keuangan::where('jenis', 'keluar')->sum(\Illuminate\Support\Facades\DB::raw('ABS(jumlah)')) ?? 0);
         $saldoKas = $totalMasuk - $totalKeluar;
 
         return view('keuangan.index', compact('transaksi', 'totalMasuk', 'totalKeluar', 'saldoKas'));
@@ -143,19 +143,20 @@ class KeuanganController extends Controller
             });
         }
 
-        $saldoAwal = ($saldoAwalQueryMasuk->sum('jumlah') ?? 0) - ($saldoAwalQueryKeluar->sum('jumlah') ?? 0);
+        $saldoAwal = ((float) ($saldoAwalQueryMasuk->sum(\Illuminate\Support\Facades\DB::raw('ABS(jumlah)')) ?? 0)) - 
+                     ((float) ($saldoAwalQueryKeluar->sum(\Illuminate\Support\Facades\DB::raw('ABS(jumlah)')) ?? 0));
 
         // 2. Total Kas Masuk & Kas Keluar Bulan Berjalan
-        $totalMasuk = $dataLaporan->where('jenis', 'masuk')->sum('jumlah');
-        $totalKeluar = $dataLaporan->where('jenis', 'keluar')->sum('jumlah');
+        $totalMasuk = (float) $dataLaporan->where('jenis', 'masuk')->sum(fn($i) => abs((float)$i->jumlah));
+        $totalKeluar = (float) $dataLaporan->where('jenis', 'keluar')->sum(fn($i) => abs((float)$i->jumlah));
         $surplusDefisit = $totalMasuk - $totalKeluar;
 
         // 3. Saldo Akhir Kas per akhir bulan ini
         $saldoAkhir = $saldoAwal + $surplusDefisit;
 
         // 4. Saldo Kas Kumulatif Keseluruhan (hingga saat ini)
-        $saldoTotalSaatIni = (Keuangan::where('jenis', 'masuk')->sum('jumlah') ?? 0) -
-                             (Keuangan::where('jenis', 'keluar')->sum('jumlah') ?? 0);
+        $saldoTotalSaatIni = ((float) (Keuangan::where('jenis', 'masuk')->sum(\Illuminate\Support\Facades\DB::raw('ABS(jumlah)')) ?? 0)) -
+                             ((float) (Keuangan::where('jenis', 'keluar')->sum(\Illuminate\Support\Facades\DB::raw('ABS(jumlah)')) ?? 0));
 
         return view('keuangan.laporan', compact(
             'dataLaporan',
