@@ -6,11 +6,16 @@
     <title>Buat Password Baru - E-RT RW Digital Bersatu</title>
     <link rel="icon" type="image/svg+xml" href="{{ asset('img/logo_ert_rw.svg') }}">
 
-    <!-- Pre-load View Mode Script -->
+    <!-- Pre-load View Mode & Theme Script -->
     <script>
         (function() {
-            var saved = localStorage.getItem('erw_view_mode') || (window.innerWidth <= 768 ? 'phone' : 'desktop');
-            document.documentElement.classList.add(saved === 'phone' ? 'mode-phone' : 'mode-desktop');
+            var savedMode = localStorage.getItem('erw_view_mode') || (window.innerWidth <= 768 ? 'phone' : 'desktop');
+            document.documentElement.classList.add(savedMode === 'phone' ? 'mode-phone' : 'mode-desktop');
+
+            var savedTheme = localStorage.getItem('erw_theme') || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            if (savedTheme === 'dark') {
+                document.documentElement.classList.add('dark-theme');
+            }
         })();
     </script>
 
@@ -154,6 +159,76 @@
                 overflow-x: auto !important;
             }
         }
+        /* Dark Mode Styling */
+        html.dark-theme body,
+        body.dark-theme {
+            background: linear-gradient(135deg, #064e3b 0%, #0f172a 100%) !important;
+        }
+
+        body.dark-theme .login-card {
+            background: #151f32 !important;
+            border-color: #1e293b !important;
+            color: #f8fafc !important;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4) !important;
+        }
+
+        body.dark-theme .text-dark,
+        body.dark-theme h4 {
+            color: #f8fafc !important;
+        }
+
+        body.dark-theme .text-muted,
+        body.dark-theme .text-secondary {
+            color: #94a3b8 !important;
+        }
+
+        body.dark-theme .form-control {
+            background-color: #0b1322 !important;
+            border-color: #334155 !important;
+            color: #f8fafc !important;
+        }
+
+        body.dark-theme .form-control:focus {
+            border-color: #10b981 !important;
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2) !important;
+        }
+
+        body.dark-theme .input-group-text {
+            background-color: #0f172a !important;
+            border-color: #334155 !important;
+            color: #94a3b8 !important;
+        }
+
+        body.dark-theme .border-top {
+            border-color: #1e293b !important;
+        }
+
+        /* Toggle Button Theme Style */
+        .theme-toggle-btn {
+            width: 32px;
+            height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.22);
+            backdrop-filter: blur(8px);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .theme-toggle-btn:hover {
+            background: rgba(255, 255, 255, 0.35);
+            transform: scale(1.05);
+        }
+
+        body.dark-theme .theme-toggle-btn {
+            background: #1e293b !important;
+            color: #facc15 !important;
+            border-color: #334155 !important;
+        }
     </style>
 </head>
 <body>
@@ -165,14 +240,22 @@
                 <i class="fa-solid fa-arrow-left me-1"></i> Ke Login
             </a>
 
-            <!-- Mode Switcher -->
-            <div class="view-mode-switcher" title="Ganti Mode Tampilan">
-                <button type="button" class="btn-mode btn-mode-desktop" onclick="setViewMode('desktop')">
-                    <i class="fa-solid fa-desktop"></i> <span class="d-none d-sm-inline">Desktop</span>
+            <div class="d-flex align-items-center gap-2">
+                <!-- Theme Mode Toggle (Dark / Light) -->
+                <button type="button" class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Ubah Mode Gelap / Terang">
+                    <i class="fa-solid fa-moon theme-icon-dark"></i>
+                    <i class="fa-solid fa-sun theme-icon-light d-none"></i>
                 </button>
-                <button type="button" class="btn-mode btn-mode-phone" onclick="setViewMode('phone')">
-                    <i class="fa-solid fa-mobile-screen-button"></i> <span class="d-none d-sm-inline">Phone</span>
-                </button>
+
+                <!-- Mode Switcher -->
+                <div class="view-mode-switcher" title="Ganti Mode Tampilan">
+                    <button type="button" class="btn-mode btn-mode-desktop" onclick="setViewMode('desktop')">
+                        <i class="fa-solid fa-desktop"></i> <span class="d-none d-sm-inline">Desktop</span>
+                    </button>
+                    <button type="button" class="btn-mode btn-mode-phone" onclick="setViewMode('phone')">
+                        <i class="fa-solid fa-mobile-screen-button"></i> <span class="d-none d-sm-inline">Phone</span>
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -236,8 +319,33 @@
         </div>
     </div>
 
-    <!-- Desktop & Phone Mode Script -->
+    <!-- Desktop/Phone & Theme Mode Script -->
     <script>
+        function toggleTheme() {
+            var currentTheme = localStorage.getItem('erw_theme') || (document.documentElement.classList.contains('dark-theme') ? 'dark' : 'light');
+            var newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            setTheme(newTheme);
+        }
+
+        function setTheme(theme) {
+            localStorage.setItem('erw_theme', theme);
+            applyTheme(theme);
+        }
+
+        function applyTheme(theme) {
+            if (theme === 'dark') {
+                document.documentElement.classList.add('dark-theme');
+                document.body.classList.add('dark-theme');
+                document.querySelectorAll('.theme-icon-dark').forEach(el => el.classList.add('d-none'));
+                document.querySelectorAll('.theme-icon-light').forEach(el => el.classList.remove('d-none'));
+            } else {
+                document.documentElement.classList.remove('dark-theme');
+                document.body.classList.remove('dark-theme');
+                document.querySelectorAll('.theme-icon-dark').forEach(el => el.classList.remove('d-none'));
+                document.querySelectorAll('.theme-icon-light').forEach(el => el.classList.add('d-none'));
+            }
+        }
+
         function setViewMode(mode) {
             localStorage.setItem('erw_view_mode', mode);
             applyViewMode(mode);
@@ -266,6 +374,9 @@
         }
 
         document.addEventListener('DOMContentLoaded', function () {
+            var currentTheme = localStorage.getItem('erw_theme') || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            applyTheme(currentTheme);
+
             var currentMode = localStorage.getItem('erw_view_mode') || (window.innerWidth <= 768 ? 'phone' : 'desktop');
             applyViewMode(currentMode);
         });

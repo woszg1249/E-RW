@@ -7,11 +7,16 @@
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="{{ asset('img/logo_ert_rw.svg') }}">
 
-    <!-- Pre-load View Mode Script -->
+    <!-- Pre-load View Mode & Theme Script -->
     <script>
         (function() {
-            var saved = localStorage.getItem('erw_view_mode') || 'desktop';
-            document.documentElement.classList.add(saved === 'phone' ? 'mode-phone' : 'mode-desktop');
+            var savedMode = localStorage.getItem('erw_view_mode') || 'desktop';
+            document.documentElement.classList.add(savedMode === 'phone' ? 'mode-phone' : 'mode-desktop');
+
+            var savedTheme = localStorage.getItem('erw_theme') || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            if (savedTheme === 'dark') {
+                document.documentElement.classList.add('dark-theme');
+            }
         })();
     </script>
 
@@ -294,6 +299,125 @@
                 overflow-x: auto !important;
             }
         }
+        /* Dark Theme Variables & Styles */
+        html.dark-theme,
+        body.dark-theme {
+            background-color: #0b1322 !important;
+            color: #e2e8f0 !important;
+        }
+
+        body.dark-theme .landing-nav {
+            background: rgba(21, 31, 50, 0.95) !important;
+            border-bottom-color: #1e293b !important;
+        }
+
+        body.dark-theme .landing-nav .navbar-brand span {
+            color: #f8fafc !important;
+        }
+
+        body.dark-theme .landing-nav .nav-link {
+            color: #94a3b8 !important;
+        }
+
+        body.dark-theme .landing-nav .nav-link:hover {
+            color: #34d399 !important;
+            background: rgba(16, 185, 129, 0.15) !important;
+        }
+
+        body.dark-theme .hero-section {
+            background: radial-gradient(circle at 10% 20%, rgba(16, 185, 129, 0.12) 0%, rgba(11, 19, 34, 0) 60%),
+                        radial-gradient(circle at 90% 80%, rgba(5, 150, 105, 0.12) 0%, rgba(11, 19, 34, 0) 60%),
+                        #0b1322 !important;
+        }
+
+        body.dark-theme .hero-title,
+        body.dark-theme .section-title,
+        body.dark-theme h1, body.dark-theme h2, body.dark-theme h3,
+        body.dark-theme h4, body.dark-theme h5, body.dark-theme h6,
+        body.dark-theme .text-dark {
+            color: #f8fafc !important;
+        }
+
+        body.dark-theme .hero-desc,
+        body.dark-theme .section-desc,
+        body.dark-theme .text-muted,
+        body.dark-theme .text-slate {
+            color: #94a3b8 !important;
+        }
+
+        body.dark-theme .card,
+        body.dark-theme .feature-card,
+        body.dark-theme .service-card,
+        body.dark-theme .stat-box,
+        body.dark-theme .step-card,
+        body.dark-theme .info-card {
+            background-color: #151f32 !important;
+            border-color: #1e293b !important;
+            color: #f8fafc !important;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25) !important;
+        }
+
+        body.dark-theme .bg-light,
+        body.dark-theme .bg-white {
+            background-color: #151f32 !important;
+            color: #f8fafc !important;
+        }
+
+        body.dark-theme .border,
+        body.dark-theme .border-bottom,
+        body.dark-theme .border-top {
+            border-color: #1e293b !important;
+        }
+
+        body.dark-theme .view-mode-switcher {
+            background: #1e293b !important;
+            border-color: #334155 !important;
+        }
+
+        body.dark-theme .view-mode-switcher .btn-mode {
+            color: #94a3b8 !important;
+        }
+
+        body.dark-theme .view-mode-switcher .btn-mode.active {
+            background: #0b1322 !important;
+            color: #34d399 !important;
+        }
+
+        body.dark-theme footer {
+            background-color: #070c16 !important;
+            border-top-color: #1e293b !important;
+        }
+
+        /* Toggle Button Theme Style */
+        .theme-toggle-btn {
+            width: 38px;
+            height: 38px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            background: #f1f5f9;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+        }
+
+        .theme-toggle-btn:hover {
+            background: #e2e8f0;
+            color: #0f172a;
+            transform: scale(1.05);
+        }
+
+        body.dark-theme .theme-toggle-btn {
+            background: #1e293b !important;
+            color: #facc15 !important;
+            border-color: #334155 !important;
+        }
+
+        body.dark-theme .theme-toggle-btn:hover {
+            background: #334155 !important;
+        }
     </style>
 </head>
 <body>
@@ -320,6 +444,12 @@
                         <li class="nav-item"><a class="nav-link" href="#kontak">Kontak</a></li>
                     </ul>
                     <div class="d-flex align-items-center gap-2">
+                        <!-- Theme Mode Toggle (Dark / Light) -->
+                        <button type="button" class="theme-toggle-btn me-1" id="themeToggleBtn" onclick="toggleTheme()" title="Ubah Mode Gelap / Terang">
+                            <i class="fa-solid fa-moon theme-icon-dark"></i>
+                            <i class="fa-solid fa-sun theme-icon-light d-none"></i>
+                        </button>
+
                         <!-- Desktop & Phone Mode Switcher di Navbar -->
                         <div class="view-mode-switcher me-1">
                             <button type="button" class="btn-mode btn-mode-desktop" onclick="setViewMode('desktop')" title="Mode Desktop (Layar Lebar)">
@@ -987,8 +1117,33 @@
     <!-- Bootstrap 5 JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!-- Desktop & Phone Mode Script -->
+    <!-- Desktop/Phone & Theme Mode Script -->
     <script>
+        function toggleTheme() {
+            var currentTheme = localStorage.getItem('erw_theme') || (document.documentElement.classList.contains('dark-theme') ? 'dark' : 'light');
+            var newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            setTheme(newTheme);
+        }
+
+        function setTheme(theme) {
+            localStorage.setItem('erw_theme', theme);
+            applyTheme(theme);
+        }
+
+        function applyTheme(theme) {
+            if (theme === 'dark') {
+                document.documentElement.classList.add('dark-theme');
+                document.body.classList.add('dark-theme');
+                document.querySelectorAll('.theme-icon-dark').forEach(el => el.classList.add('d-none'));
+                document.querySelectorAll('.theme-icon-light').forEach(el => el.classList.remove('d-none'));
+            } else {
+                document.documentElement.classList.remove('dark-theme');
+                document.body.classList.remove('dark-theme');
+                document.querySelectorAll('.theme-icon-dark').forEach(el => el.classList.remove('d-none'));
+                document.querySelectorAll('.theme-icon-light').forEach(el => el.classList.add('d-none'));
+            }
+        }
+
         function setViewMode(mode) {
             localStorage.setItem('erw_view_mode', mode);
             applyViewMode(mode);
@@ -1019,6 +1174,9 @@
         }
 
         document.addEventListener('DOMContentLoaded', function () {
+            var currentTheme = localStorage.getItem('erw_theme') || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            applyTheme(currentTheme);
+
             var currentMode = localStorage.getItem('erw_view_mode') || 'desktop';
             applyViewMode(currentMode);
         });
