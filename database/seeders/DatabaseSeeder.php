@@ -106,70 +106,37 @@ class DatabaseSeeder extends Seeder
         $rt07->role = 'Admin';
         $rt07->save();
 
-        // 5. Akun Warga Contoh: Agus Kusuma
-        $warga1 = User::firstOrCreate(
-            ['username' => 'gus.usuma31'],
-            [
-                'nama' => 'Agus Kusuma',
-                'email' => 'agus.kusuma@gmail.com',
-                'password' => Hash::make('Password123'),
-                'role' => 'Warga',
-                'alamat' => 'Jl. Melati No. 20 RT 06/RW 19',
-                'kelamin' => 'Laki-laki',
-                'no_hp' => '085712345678',
-                'nik' => '3275012304850005',
-                'no_kk' => '3275012304850005',
-                'rt' => '06',
-                'rw' => '19',
-                'status_keluarga' => 'Kepala Keluarga',
-            ]
-        );
-        $warga1->password = Hash::make('Password123');
-        $warga1->role = 'Warga';
-        $warga1->save();
+        // 5. Seed Seluruh 106 Akun Warga Lingkungan RW 19
+        $this->call(WargaSeeder::class);
 
-        // 6. Akun Warga Contoh: Tasya Rahmadani
-        $warga2 = User::firstOrCreate(
-            ['username' => 'tasya'],
-            [
-                'nama' => 'Tasya Rahmadani',
-                'email' => 'tasya.rahmadani@gmail.com',
-                'password' => Hash::make('Password123'),
-                'role' => 'Warga',
-                'alamat' => 'Jl. Mawar Raya No. 08 RT 06/RW 19',
-                'kelamin' => 'Perempuan',
-                'no_hp' => '087812345678',
-                'nik' => '3270000878865562',
-                'no_kk' => '3270000878865562',
-                'rt' => '06',
-                'rw' => '19',
-                'status_keluarga' => 'Kepala Keluarga',
-            ]
-        );
-        $warga2->password = Hash::make('Password123');
-        $warga2->role = 'Warga';
-        $warga2->save();
+        // Ambil warga contoh untuk data transaksi & rekening
+        $warga1 = User::where('username', 'gus.usuma31')->first();
+        $warga2 = User::where('username', 'tasya')->first();
 
         // Rekening Bank Warga Awal untuk Agus Kusuma & Tasya
         if (class_exists(RekeningWarga::class)) {
-            RekeningWarga::firstOrCreate(
-                ['user_id' => $warga1->id],
-                [
-                    'nomor_rekening' => 'BW-1906-880012',
-                    'saldo' => 125000,
-                    'status' => 'aktif',
-                    'pin' => Hash::make('123456'),
-                ]
-            );
-            RekeningWarga::firstOrCreate(
-                ['user_id' => $warga2->id],
-                [
-                    'nomor_rekening' => 'BW-1906-880013',
-                    'saldo' => 75000,
-                    'status' => 'aktif',
-                    'pin' => Hash::make('123456'),
-                ]
-            );
+            if ($warga1) {
+                RekeningWarga::firstOrCreate(
+                    ['user_id' => $warga1->id],
+                    [
+                        'nomor_rekening' => 'BW-1906-880012',
+                        'saldo' => 125000,
+                        'status' => 'aktif',
+                        'pin' => Hash::make('123456'),
+                    ]
+                );
+            }
+            if ($warga2) {
+                RekeningWarga::firstOrCreate(
+                    ['user_id' => $warga2->id],
+                    [
+                        'nomor_rekening' => 'BW-1906-880013',
+                        'saldo' => 75000,
+                        'status' => 'aktif',
+                        'pin' => Hash::make('123456'),
+                    ]
+                );
+            }
         }
 
         // Data Kas Keuangan Awal jika kosong
