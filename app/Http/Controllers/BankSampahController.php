@@ -12,29 +12,40 @@ class BankSampahController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
-        $query = BankSampah::with('user');
+        try {
+            $query = BankSampah::with('user');
 
-        if ($user->isWarga()) {
-            $query->where('id_user', $user->id);
+            if ($user && method_exists($user, 'isWarga') && $user->isWarga()) {
+                $query->where('id_user', $user->id);
+            }
+
+            if ($request->filled('status')) {
+                $query->where('status', $request->status);
+            }
+
+            $transaksiList = $query->orderBy('id', 'desc')->paginate(15)->withQueryString();
+
+            $totalKg = (float) (($user && method_exists($user, 'isWarga') && $user->isWarga()
+                ? BankSampah::where('id_user', $user->id)->where('status', 'approved')->sum('berat_kg')
+                : BankSampah::where('status', 'approved')->sum('berat_kg')) ?? 0);
+
+            $totalRupiah = (float) (($user && method_exists($user, 'isWarga') && $user->isWarga()
+                ? BankSampah::where('id_user', $user->id)->where('status', 'approved')->sum('total_harga')
+                : BankSampah::where('status', 'approved')->sum('total_harga')) ?? 0);
+
+            $wargaList = ($user && method_exists($user, 'isAdmin') && $user->isAdmin())
+                ? User::where('role', 'Warga')->orderBy('nama', 'asc')->get()
+                : [];
+
+            return view('bank_sampah.index', compact('transaksiList', 'totalKg', 'totalRupiah', 'wargaList'));
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('BankSampah index error: ' . $e->getMessage());
+            $transaksiList = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 15);
+            $totalKg = 0;
+            $totalRupiah = 0;
+            $wargaList = [];
+            return view('bank_sampah.index', compact('transaksiList', 'totalKg', 'totalRupiah', 'wargaList'));
         }
-
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        $transaksiList = $query->orderBy('id', 'desc')->paginate(15)->withQueryString();
-
-        $totalKg = (float) (($user->isWarga()
-            ? BankSampah::where('id_user', $user->id)->where('status', 'approved')->sum('berat_kg')
-            : BankSampah::where('status', 'approved')->sum('berat_kg')) ?? 0);
-
-        $totalRupiah = (float) (($user->isWarga()
-            ? BankSampah::where('id_user', $user->id)->where('status', 'approved')->sum('total_harga')
-            : BankSampah::where('status', 'approved')->sum('total_harga')) ?? 0);
-
-        $wargaList = $user->isAdmin() ? User::where('role', 'Warga')->orderBy('nama', 'asc')->get() : [];
-
-        return view('bank_sampah.index', compact('transaksiList', 'totalKg', 'totalRupiah', 'wargaList'));
     }
 
     public function store(Request $request)

@@ -56,7 +56,7 @@
                         @forelse($transaksiList as $index => $item)
                             <tr>
                                 <td class="small">{{ $transaksiList->firstItem() + $index }}</td>
-                                <td class="fw-bold text-dark">{{ $item->nama_warga ?? ($item->user->nama ?? '-') }}</td>
+                                <td class="fw-bold text-dark">{{ $item->nama_warga ?? ($item->user?->nama ?? '-') }}</td>
                                 <td>
                                     <span class="badge bg-light text-primary border rounded-pill px-3 py-1">
                                         {{ $item->jenis_sampah }}
