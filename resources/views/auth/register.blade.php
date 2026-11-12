@@ -2,14 +2,27 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
     <title>Registrasi Warga - E-RT RW Digital Bersatu</title>
+    <link rel="icon" type="image/svg+xml" href="{{ asset('img/logo_ert_rw.svg') }}">
+
+    <!-- Pre-load View Mode Script -->
+    <script>
+        (function() {
+            var saved = localStorage.getItem('erw_view_mode') || (window.innerWidth <= 768 ? 'phone' : 'desktop');
+            document.documentElement.classList.add(saved === 'phone' ? 'mode-phone' : 'mode-desktop');
+        })();
+    </script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
+        * {
+            box-sizing: border-box;
+        }
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
             background: linear-gradient(135deg, #059669 0%, #0284c7 100%);
@@ -18,12 +31,51 @@
             align-items: center;
             justify-content: center;
             padding: 30px 15px;
+            margin: 0;
+            transition: background 0.3s;
+        }
+        .auth-wrapper {
+            width: 100%;
+            max-width: 740px;
+        }
+        .auth-header-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+            padding: 0 4px;
+        }
+        .view-mode-switcher {
+            display: inline-flex;
+            background: rgba(255, 255, 255, 0.22);
+            backdrop-filter: blur(8px);
+            padding: 3px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .view-mode-switcher .btn-mode {
+            border: none;
+            background: transparent;
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 0.76rem;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.9);
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+        }
+        .view-mode-switcher .btn-mode.active {
+            background: #ffffff;
+            color: #059669;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
         }
         .register-card {
             background: #ffffff;
             border-radius: 24px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-            max-width: 720px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.18);
             width: 100%;
             padding: 40px 36px;
         }
@@ -67,11 +119,72 @@
             border-color: #059669;
             background-color: #f0fdf4;
         }
+
+        /* Mode Phone Responsif untuk HP */
+        body.mode-phone {
+            padding: 14px 10px;
+        }
+        body.mode-phone .auth-wrapper {
+            max-width: 100%;
+        }
+        body.mode-phone .register-card {
+            padding: 24px 18px;
+            border-radius: 20px;
+        }
+        body.mode-phone .form-control,
+        body.mode-phone .form-select {
+            font-size: 16px !important;
+            padding: 12px 14px;
+        }
+        body.mode-phone .btn-register {
+            padding: 13px;
+        }
+
+        @media (max-width: 576px) {
+            body {
+                padding: 14px 10px;
+            }
+            .auth-wrapper {
+                max-width: 100%;
+            }
+            .register-card {
+                padding: 22px 16px;
+                border-radius: 18px;
+            }
+            .form-control, .form-select {
+                font-size: 16px !important;
+            }
+        }
+
+        @media (max-width: 991.98px) {
+            body.mode-desktop {
+                min-width: 768px !important;
+                overflow-x: auto !important;
+            }
+        }
     </style>
 </head>
 <body>
 
-    <div class="register-card">
+    <div class="auth-wrapper">
+        <!-- Header Bar: Kembali & Desktop/Phone Switcher -->
+        <div class="auth-header-bar">
+            <a href="{{ route('login') }}" class="text-white text-decoration-none small fw-bold">
+                <i class="fa-solid fa-arrow-left me-1"></i> Kembali ke Login
+            </a>
+
+            <!-- Mode Switcher -->
+            <div class="view-mode-switcher" title="Ganti Mode Tampilan">
+                <button type="button" class="btn-mode btn-mode-desktop" onclick="setViewMode('desktop')">
+                    <i class="fa-solid fa-desktop"></i> <span class="d-none d-sm-inline">Desktop</span>
+                </button>
+                <button type="button" class="btn-mode btn-mode-phone" onclick="setViewMode('phone')">
+                    <i class="fa-solid fa-mobile-screen-button"></i> <span class="d-none d-sm-inline">Phone</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="register-card">
         <div class="text-center mb-4">
             <img src="{{ asset('img/logo_ert_rw.svg') }}" alt="Logo RT RW" style="width: 56px; height: 56px;" class="mb-2">
             <h4 class="fw-bold text-dark mb-1">Pendaftaran Akun Warga Baru</h4>
@@ -220,6 +333,7 @@
                 <a href="{{ route('login') }}" class="fw-bold text-success text-decoration-none small">Masuk di Sini</a>
             </div>
         </form>
+        </div>
     </div>
 
     <script>
@@ -329,6 +443,39 @@
         document.addEventListener('DOMContentLoaded', function() {
             const selectedTipe = document.querySelector('input[name="tipe_kk"]:checked')?.value || 'baru';
             updateTipeKk(selectedTipe);
+        });
+
+        // Desktop & Phone Mode Script
+        function setViewMode(mode) {
+            localStorage.setItem('erw_view_mode', mode);
+            applyViewMode(mode);
+        }
+
+        function applyViewMode(mode) {
+            const body = document.body;
+            body.classList.remove('mode-desktop', 'mode-phone');
+            body.classList.add(mode === 'phone' ? 'mode-phone' : 'mode-desktop');
+
+            document.querySelectorAll('.btn-mode-desktop').forEach(function(el) {
+                el.classList.toggle('active', mode === 'desktop');
+            });
+            document.querySelectorAll('.btn-mode-phone').forEach(function(el) {
+                el.classList.toggle('active', mode === 'phone');
+            });
+
+            var metaVp = document.querySelector('meta[name="viewport"]');
+            if (metaVp) {
+                if (mode === 'desktop' && window.innerWidth <= 768) {
+                    metaVp.setAttribute('content', 'width=850, initial-scale=0.45, maximum-scale=2.0, user-scalable=yes');
+                } else {
+                    metaVp.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=5.0');
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            var currentMode = localStorage.getItem('erw_view_mode') || (window.innerWidth <= 768 ? 'phone' : 'desktop');
+            applyViewMode(currentMode);
         });
     </script>
 </body>
