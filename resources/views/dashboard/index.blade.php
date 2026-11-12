@@ -19,12 +19,14 @@
                     </p>
                 </div>
                 <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
-                    <a href="{{ route('surat.index') }}" class="btn btn-light text-success fw-bold rounded-pill px-4 me-2">
-                        <i class="fa-solid fa-file-pen me-1"></i> Ajukan Surat
-                    </a>
-                    <a href="{{ route('tagihan.index') }}" class="btn btn-outline-light rounded-pill px-4">
-                        <i class="fa-solid fa-receipt me-1"></i> Cek Tagihan
-                    </a>
+                    <div class="d-flex flex-wrap gap-2 justify-content-lg-end">
+                        <a href="{{ route('surat.index') }}" class="btn btn-light text-success fw-bold rounded-pill px-4 flex-grow-1 flex-sm-grow-0">
+                            <i class="fa-solid fa-file-pen me-1"></i> Ajukan Surat
+                        </a>
+                        <a href="{{ route('tagihan.index') }}" class="btn btn-outline-light rounded-pill px-4 flex-grow-1 flex-sm-grow-0">
+                            <i class="fa-solid fa-receipt me-1"></i> Cek Tagihan
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>

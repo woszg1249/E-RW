@@ -10,7 +10,9 @@
     <!-- Pre-load View Mode & Theme Script -->
     <script>
         (function() {
-            var savedMode = localStorage.getItem('erw_view_mode') || 'desktop';
+            var isMobile = (window.innerWidth <= 991 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+            var defaultMode = isMobile ? 'phone' : 'desktop';
+            var savedMode = localStorage.getItem('erw_view_mode') || defaultMode;
             document.documentElement.classList.add(savedMode === 'phone' ? 'mode-phone' : 'mode-desktop');
 
             var savedTheme = localStorage.getItem('erw_theme') || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
@@ -288,9 +290,33 @@
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
         }
 
-        /* Mode Responsif */
+        /* Mode Responsif Mobile */
         body.mode-phone .hero-title {
             font-size: 2.1rem !important;
+        }
+
+        @media (max-width: 576px) {
+            .landing-nav .navbar-brand span {
+                font-size: 1.05rem !important;
+            }
+            .landing-nav .navbar-brand small {
+                font-size: 0.65rem !important;
+            }
+            .landing-nav .navbar-brand img {
+                width: 34px !important;
+                height: 34px !important;
+            }
+            .hero-title {
+                font-size: 1.85rem !important;
+                line-height: 1.25 !important;
+            }
+            .hero-section {
+                padding-top: 35px !important;
+                padding-bottom: 35px !important;
+            }
+            .section-title {
+                font-size: 1.6rem !important;
+            }
         }
 
         @media (max-width: 991.98px) {
@@ -1177,7 +1203,9 @@
             var currentTheme = localStorage.getItem('erw_theme') || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
             applyTheme(currentTheme);
 
-            var currentMode = localStorage.getItem('erw_view_mode') || 'desktop';
+            var isMobile = (window.innerWidth <= 991 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+            var defaultMode = isMobile ? 'phone' : 'desktop';
+            var currentMode = localStorage.getItem('erw_view_mode') || defaultMode;
             applyViewMode(currentMode);
         });
     </script>

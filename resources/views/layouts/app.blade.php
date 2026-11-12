@@ -9,7 +9,9 @@
     <!-- Pre-load View Mode & Theme Script -->
     <script>
         (function() {
-            var savedMode = localStorage.getItem('erw_view_mode') || 'desktop';
+            var isMobile = (window.innerWidth <= 991 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+            var defaultMode = isMobile ? 'phone' : 'desktop';
+            var savedMode = localStorage.getItem('erw_view_mode') || defaultMode;
             document.documentElement.classList.add(savedMode === 'phone' ? 'mode-phone' : 'mode-desktop');
 
             var savedTheme = localStorage.getItem('erw_theme') || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
@@ -259,18 +261,93 @@
             transform: translateY(-1px);
         }
 
+        /* Sidebar Backdrop Overlay untuk Mobile */
+        .sidebar-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 23, 42, 0.55);
+            backdrop-filter: blur(2px);
+            z-index: 1045;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+
+        .sidebar-backdrop.show {
+            display: block;
+            opacity: 1;
+        }
+
         @media (max-width: 991.98px) {
             #sidebar {
                 margin-left: calc(-1 * var(--sidebar-width));
+                z-index: 1050;
+                box-shadow: none;
             }
             #sidebar.show-mobile {
-                margin-left: 0;
+                margin-left: 0 !important;
+                box-shadow: 4px 0 24px rgba(0, 0, 0, 0.25) !important;
             }
             #content-wrapper {
-                margin-left: 0;
+                margin-left: 0 !important;
             }
             .page-content {
-                padding: 18px;
+                padding: 16px 14px 80px 14px;
+            }
+            .top-navbar {
+                padding: 10px 16px;
+            }
+            body:not(.mode-desktop) #mobileBottomNav {
+                display: flex !important;
+                justify-content: space-around;
+            }
+            body:not(.mode-desktop) {
+                padding-bottom: 70px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .top-navbar {
+                padding: 10px 12px !important;
+            }
+            .view-mode-switcher .btn-mode span {
+                display: none !important;
+            }
+            .view-mode-switcher .btn-mode {
+                padding: 5px 8px !important;
+            }
+            .theme-toggle-btn {
+                width: 34px !important;
+                height: 34px !important;
+                font-size: 0.85rem !important;
+            }
+            .user-avatar-img {
+                width: 32px !important;
+                height: 32px !important;
+            }
+            .user-pill {
+                padding: 2px !important;
+                border-radius: 50% !important;
+                border: none !important;
+                background: transparent !important;
+            }
+            .page-content {
+                padding: 12px 10px 80px 10px !important;
+            }
+            .card-custom {
+                border-radius: 12px !important;
+            }
+            .table-responsive {
+                border-radius: 10px;
+                border: 1px solid #e2e8f0;
+            }
+            .table th, .table td {
+                white-space: nowrap;
+                padding: 8px 10px !important;
+                font-size: 0.82rem !important;
             }
         }
 
@@ -343,16 +420,18 @@
 
         /* ===== ATURAN KETIKA MODE PHONE DIAKTIFKAN ===== */
         body.mode-phone {
-            padding-bottom: 65px;
+            padding-bottom: 70px;
         }
 
         body.mode-phone #sidebar {
             margin-left: calc(-1 * var(--sidebar-width));
+            z-index: 1050;
         }
 
         body.mode-phone #sidebar.show-mobile {
             margin-left: 0 !important;
             display: flex !important;
+            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.25) !important;
         }
 
         body.mode-phone #content-wrapper {
@@ -360,11 +439,11 @@
         }
 
         body.mode-phone .top-navbar {
-            padding: 12px 18px;
+            padding: 10px 14px;
         }
 
         body.mode-phone .page-content {
-            padding: 16px 16px 70px 16px;
+            padding: 14px 12px 80px 12px;
         }
 
         body.mode-phone #mobileBottomNav {
@@ -540,17 +619,48 @@
             border-color: #334155 !important;
         }
 
-        body.dark-theme .mobile-bottom-nav {
-            background: #151f32 !important;
+        body.dark-theme #mobileBottomNav {
+            background-color: #151f32 !important;
             border-top-color: #1e293b !important;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4) !important;
         }
 
-        body.dark-theme .mobile-nav-link {
+        body.dark-theme #mobileBottomNav .nav-mobile-item {
             color: #94a3b8 !important;
         }
 
-        body.dark-theme .mobile-nav-link.active {
-            color: #10b981 !important;
+        body.dark-theme #mobileBottomNav .nav-mobile-item.active,
+        body.dark-theme #mobileBottomNav .nav-mobile-item:hover {
+            color: #34d399 !important;
+        }
+
+        body.dark-theme #offcanvasMobileMenu {
+            background-color: #151f32 !important;
+            color: #f8fafc !important;
+            border-top: 1px solid #1e293b !important;
+        }
+
+        body.dark-theme #offcanvasMobileMenu .offcanvas-header {
+            border-bottom-color: #1e293b !important;
+        }
+
+        body.dark-theme #offcanvasMobileMenu .bg-light {
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
+            color: #f8fafc !important;
+        }
+
+        body.dark-theme #offcanvasMobileMenu a.text-dark,
+        body.dark-theme #offcanvasMobileMenu span.text-dark {
+            color: #f8fafc !important;
+        }
+
+        body.dark-theme #offcanvasMobileMenu .border-top {
+            border-top-color: #1e293b !important;
+        }
+
+        body.dark-theme .btn-close {
+            filter: invert(1) grayscale(100%);
         }
 
         /* Toggle Button Theme Style */
@@ -588,14 +698,20 @@
 </head>
 <body>
 
+        <!-- Sidebar Backdrop Overlay (Mobile) -->
+        <div id="sidebarBackdrop" class="sidebar-backdrop"></div>
+
         <!-- Sidebar -->
         <nav id="sidebar">
         <div class="sidebar-brand">
             <img src="{{ asset('img/logo_ert_rw.svg') }}" alt="Logo RT RW Digital">
-            <div>
+            <div class="flex-grow-1">
                 <h6>RT RW DIGITAL</h6>
                 <span>RW 19 (RT 06 & RT 07)</span>
             </div>
+            <button type="button" class="btn btn-sm btn-light border d-lg-none ms-auto rounded-circle d-flex align-items-center justify-content-center" id="sidebarCloseBtn" style="width: 32px; height: 32px;" title="Tutup Menu">
+                <i class="fa-solid fa-xmark text-secondary"></i>
+            </button>
         </div>
 
         <div class="sidebar-menu">
@@ -978,25 +1094,62 @@
             var currentTheme = localStorage.getItem('erw_theme') || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
             applyTheme(currentTheme);
 
-            // Inisialisasi Mode Tampilan Tersimpan (Default: Desktop)
-            var currentMode = localStorage.getItem('erw_view_mode') || 'desktop';
+            // Inisialisasi Mode Tampilan (Otomatis Phone jika Layar HP)
+            var isMobile = (window.innerWidth <= 991 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+            var defaultMode = isMobile ? 'phone' : 'desktop';
+            var currentMode = localStorage.getItem('erw_view_mode') || defaultMode;
             applyViewMode(currentMode);
 
-            // Sidebar Toggle Script
+            // Sidebar Toggle & Backdrop Handler
             const sidebar = document.getElementById('sidebar');
             const content = document.getElementById('content-wrapper');
             const toggleBtn = document.getElementById('sidebarToggle');
+            const closeBtn = document.getElementById('sidebarCloseBtn');
+            const backdrop = document.getElementById('sidebarBackdrop');
+
+            function openMobileSidebar() {
+                if (sidebar) sidebar.classList.add('show-mobile');
+                if (backdrop) backdrop.classList.add('show');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeMobileSidebar() {
+                if (sidebar) sidebar.classList.remove('show-mobile');
+                if (backdrop) backdrop.classList.remove('show');
+                document.body.style.overflow = '';
+            }
 
             if (toggleBtn) {
                 toggleBtn.addEventListener('click', function () {
-                    if (window.innerWidth <= 992) {
-                        sidebar.classList.toggle('show-mobile');
+                    if (window.innerWidth <= 992 || document.body.classList.contains('mode-phone')) {
+                        if (sidebar.classList.contains('show-mobile')) {
+                            closeMobileSidebar();
+                        } else {
+                            openMobileSidebar();
+                        }
                     } else {
                         sidebar.classList.toggle('collapsed');
                         content.classList.toggle('expanded');
                     }
                 });
             }
+
+            if (closeBtn) {
+                closeBtn.addEventListener('click', closeMobileSidebar);
+            }
+
+            if (backdrop) {
+                backdrop.addEventListener('click', closeMobileSidebar);
+            }
+
+            // Tutup sidebar saat klik salah satu menu di HP
+            document.querySelectorAll('#sidebar .nav-item-custom').forEach(function(item) {
+                item.addEventListener('click', function() {
+                    if (window.innerWidth <= 992 || document.body.classList.contains('mode-phone')) {
+                        closeMobileSidebar();
+                    }
+                });
+            });
         });
     </script>
 
