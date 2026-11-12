@@ -14,15 +14,17 @@
                     <p class="text-muted small mb-0">Kelola susunan keluarga, kepala keluarga, dan cetak Kartu Keluarga resmi wilayah RT 06 dan RT 07</p>
                 </div>
 
-                <form action="{{ route('warga.kk') }}" method="GET" class="d-flex flex-wrap align-items-center gap-2">
-                    <input type="text" name="search" class="form-control form-control-sm" style="min-width: 180px;" placeholder="Cari No KK / Alamat..." value="{{ request('search') }}">
-                    <select name="rt" class="form-select form-select-sm" style="min-width: 150px;">
-                        <option value="">Semua Wilayah RT</option>
+                <form action="{{ route('warga.kk') }}" method="GET" class="d-flex flex-wrap align-items-center gap-2 w-100 w-md-auto">
+                    <input type="text" name="search" class="form-control form-control-sm flex-grow-1" style="min-width: 140px;" placeholder="Cari No KK / Alamat..." value="{{ request('search') }}">
+                    <select name="rt" class="form-select form-select-sm flex-grow-1" style="min-width: 130px;">
+                        <option value="">Semua RT</option>
                         <option value="06" {{ request('rt') == '06' ? 'selected' : '' }}>RT 06 (Dimas)</option>
                         <option value="07" {{ request('rt') == '07' ? 'selected' : '' }}>RT 07 (Bambang)</option>
                     </select>
-                    <button type="submit" class="btn btn-sm btn-dark px-3">Filter</button>
-                    <a href="{{ route('warga.kk') }}" class="btn btn-sm btn-outline-secondary px-2">Reset</a>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-sm btn-dark px-3">Filter</button>
+                        <a href="{{ route('warga.kk') }}" class="btn btn-sm btn-outline-secondary px-2">Reset</a>
+                    </div>
                 </form>
             </div>
         </div>

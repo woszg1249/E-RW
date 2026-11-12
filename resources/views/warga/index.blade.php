@@ -36,17 +36,17 @@
     </div>
 
     <!-- Actions Bar -->
-    <div class="col-12 d-flex justify-content-between align-items-center">
+    <div class="col-12 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
         <div>
             <h5 class="fw-bold text-dark mb-0">Daftar Induk Kependudukan Warga</h5>
             <small class="text-muted">Kelola data administrasi kependudukan warga RT 06 dan RT 07</small>
         </div>
-        <div class="d-flex gap-2">
-            <a href="{{ route('warga.kk') }}" class="btn btn-outline-primary rounded-pill px-3">
+        <div class="d-flex flex-wrap gap-2 w-100 w-md-auto">
+            <a href="{{ route('warga.kk') }}" class="btn btn-outline-primary rounded-pill px-3 flex-grow-1 flex-md-grow-0">
                 <i class="fa-solid fa-address-card me-1"></i> Kelola Kartu Keluarga
             </a>
             @if(auth()->user()->isAdmin())
-                <button type="button" class="btn btn-primary-custom rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#modalTambahWarga">
+                <button type="button" class="btn btn-primary-custom rounded-pill px-3 flex-grow-1 flex-md-grow-0" data-bs-toggle="modal" data-bs-target="#modalTambahWarga">
                     <i class="fa-solid fa-user-plus me-1"></i> Tambah Warga
                 </button>
             @endif
