@@ -723,9 +723,14 @@
 
             <div class="menu-header">Administrasi & Warga</div>
             @if(auth()->user()->isAdmin())
-            <a href="{{ route('warga.index') }}" class="nav-item-custom {{ request()->routeIs('warga.index') ? 'active' : '' }}">
-                <i class="fa-solid fa-users"></i>
-                <span>Daftar Warga</span>
+            <a href="{{ route('warga.index') }}" class="nav-item-custom d-flex align-items-center justify-content-between {{ request()->routeIs('warga.index') ? 'active' : '' }}">
+                <div class="d-flex align-items-center">
+                    <i class="fa-solid fa-users me-2"></i>
+                    <span>Daftar Warga</span>
+                </div>
+                @if(isset($pendingWargaCount) && $pendingWargaCount > 0)
+                    <span class="badge bg-danger rounded-pill px-2 py-1 shadow-sm font-monospace" style="font-size: 0.72rem;">{{ $pendingWargaCount }} Baru</span>
+                @endif
             </a>
             @endif
             <a href="{{ route('warga.kk') }}" class="nav-item-custom {{ request()->routeIs('warga.kk*') ? 'active' : '' }}">
@@ -837,6 +842,65 @@
                         <i class="fa-solid fa-mobile-screen-button"></i> <span class="d-none d-sm-inline">Phone</span>
                     </button>
                 </div>
+
+                @if(auth()->user()->isAdmin())
+                <!-- Lonceng Notifikasi Pendaftaran Warga Baru untuk Ketua RT/Admin -->
+                <div class="dropdown me-1">
+                    <button class="btn btn-light border-0 position-relative rounded-circle d-flex align-items-center justify-content-center shadow-none p-2" 
+                            type="button" 
+                            id="notifDropdown" 
+                            data-bs-toggle="dropdown" 
+                            aria-expanded="false" 
+                            style="width: 38px; height: 38px; background: rgba(0,0,0,0.05);"
+                            title="Notifikasi Pendaftaran Warga Baru">
+                        <i class="fa-solid fa-bell text-secondary fs-5"></i>
+                        @if(isset($pendingWargaCount) && $pendingWargaCount > 0)
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-white" style="font-size: 0.68rem; padding: 0.28em 0.55em;">
+                                {{ $pendingWargaCount }}
+                            </span>
+                        @endif
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-4 p-0 mt-2" aria-labelledby="notifDropdown" style="width: 330px; max-width: 90vw;">
+                        <div class="p-3 bg-light border-bottom d-flex align-items-center justify-content-between rounded-top-4">
+                            <h6 class="mb-0 fw-bold text-dark"><i class="fa-solid fa-bell text-warning me-2"></i>Pemberitahuan RT</h6>
+                            @if(isset($pendingWargaCount) && $pendingWargaCount > 0)
+                                <span class="badge bg-warning text-dark rounded-pill">{{ $pendingWargaCount }} Menunggu ACC</span>
+                            @else
+                                <span class="badge bg-success bg-opacity-10 text-success rounded-pill">0 Pending</span>
+                            @endif
+                        </div>
+                        <div class="p-2" style="max-height: 280px; overflow-y: auto;">
+                            @if(isset($pendingWargaCount) && $pendingWargaCount > 0 && isset($pendingWargaItems))
+                                @foreach($pendingWargaItems as $item)
+                                    <div class="p-2 border-bottom d-flex align-items-center justify-content-between gap-2">
+                                        <div>
+                                            <div class="fw-bold text-dark small">{{ $item->nama }}</div>
+                                            <small class="text-muted d-block">NIK: {{ $item->nik ?? '-' }} • RT {{ $item->rt ?? '06' }}</small>
+                                            <small class="text-primary font-monospace">{{ '@' . $item->username }}</small>
+                                        </div>
+                                        <form action="{{ route('warga.acc', $item->id) }}" method="POST" class="m-0" onsubmit="return confirm('Setujui (ACC) warga {{ $item->nama }}?');">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-success rounded-pill px-2 py-1 shadow-sm" style="font-size: 0.72rem;">
+                                                <i class="fa-solid fa-check me-1"></i>ACC
+                                            </button>
+                                        </form>
+                                    </div>
+                                @endforeach
+                            @else
+                                <div class="text-center py-4 text-muted small">
+                                    <i class="fa-solid fa-circle-check text-success fs-3 mb-2 d-block"></i>
+                                    Tidak ada pendaftaran warga yang tertunda saat ini.
+                                </div>
+                            @endif
+                        </div>
+                        <div class="p-2 text-center bg-light border-top rounded-bottom-4">
+                            <a href="{{ route('warga.index', ['status_akun' => 'pending']) }}" class="small text-decoration-none fw-bold text-primary">
+                                Buka Seluruh Data Warga &raquo;
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                @endif
 
                 <!-- User Profile Dropdown -->
                 <div class="dropdown">

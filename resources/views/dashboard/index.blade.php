@@ -32,6 +32,59 @@
         </div>
     </div>
 
+    @if(auth()->user()->isAdmin() && isset($pendingWargaCount) && $pendingWargaCount > 0)
+    <!-- Banner Notifikasi Warga Menunggu ACC untuk Pengurus / Ketua RT -->
+    <div class="col-12">
+        <div class="card-custom border border-warning shadow-sm rounded-4 p-4 text-dark" style="background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);">
+            <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="bg-warning text-dark p-3 rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 50px; height: 50px; min-width: 50px;">
+                        <i class="fa-solid fa-user-clock fs-3"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold text-dark mb-1">
+                            Pemberitahuan Ketua RT: Ada {{ $pendingWargaCount }} Pendaftaran Warga Baru Menunggu Persetujuan (ACC)!
+                        </h5>
+                        <p class="text-secondary small mb-0">
+                            Warga baru yang mendaftar online tidak dapat login sampai Anda meninjau dan menyetujui (ACC) akun mereka.
+                        </p>
+                    </div>
+                </div>
+                <div class="d-flex gap-2 align-items-center flex-wrap">
+                    <a href="{{ route('warga.index', ['status_akun' => 'pending']) }}" class="btn btn-warning fw-bold px-3 py-2 rounded-pill shadow-sm text-dark">
+                        <i class="fa-solid fa-user-check me-1"></i> Tinjau & ACC Warga ({{ $pendingWargaCount }})
+                    </a>
+                </div>
+            </div>
+            
+            @if(isset($pendingWargaItems) && $pendingWargaItems->isNotEmpty())
+            <div class="row g-2 mt-3 pt-3 border-top border-warning border-opacity-50">
+                @foreach($pendingWargaItems as $item)
+                <div class="col-md-6 col-lg-4">
+                    <div class="bg-white p-3 rounded-3 border d-flex align-items-center justify-content-between shadow-sm">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="fa-solid fa-user text-primary fs-5"></i>
+                            <div>
+                                <div class="fw-bold text-dark small">{{ $item->nama }}</div>
+                                <small class="text-muted d-block">NIK: {{ $item->nik ?? '-' }} • RT {{ $item->rt ?? '06' }}</small>
+                                <small class="text-primary font-monospace">{{ '@' . $item->username }}</small>
+                            </div>
+                        </div>
+                        <form action="{{ route('warga.acc', $item->id) }}" method="POST" class="m-0" onsubmit="return confirm('ACC pendaftaran {{ $item->nama }} sekarang?');">
+                            @csrf
+                            <button type="submit" class="btn btn-sm btn-success rounded-pill px-3 py-1 fw-bold" style="font-size: 0.78rem;">
+                                <i class="fa-solid fa-check me-1"></i>ACC
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+            @endif
+        </div>
+    </div>
+    @endif
+
     <!-- Primary Metric Cards -->
     <div class="col-xl-3 col-md-6">
         <div class="card-custom p-3 p-xl-4 h-100">
