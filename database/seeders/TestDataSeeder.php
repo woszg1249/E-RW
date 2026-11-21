@@ -24,6 +24,32 @@ class TestDataSeeder extends Seeder
         $admin = User::where('role', 'Admin')->first() ?? User::first();
         $adminId = $admin ? $admin->id : 1;
 
+        // 0. Akun Warga Baru Contoh (Budi Santoso)
+        $wargaBaru = User::firstOrCreate(
+            ['username' => 'budi.santoso'],
+            [
+                'nama' => 'Budi Santoso',
+                'email' => 'budi.santoso@gmail.com',
+                'password' => \Illuminate\Support\Facades\Hash::make('Password123'),
+                'nik' => '3275010101950001',
+                'no_kk' => '3275010101950001',
+                'alamat' => 'Jl. Mawar Indah No. 15 RT 06/RW 19',
+                'kelamin' => 'Laki-laki',
+                'no_hp' => '081234567899',
+                'rt' => '06',
+                'rw' => '19',
+                'role' => 'Warga',
+                'foto' => 'profile.jpg',
+                'status_keluarga' => 'Kepala Keluarga',
+                'pekerjaan' => 'Karyawan Swasta',
+                'status_perkawinan' => 'Kawin',
+                'pendidikan' => 'S1 / Sarjana',
+                'agama' => 'Islam',
+                'tempat_lahir' => 'Bekasi',
+                'tanggal_lahir' => '1995-05-15',
+            ]
+        );
+
         $wargaList = User::where('role', 'Warga')->get();
         if ($wargaList->isEmpty()) {
             $wargaList = User::all();
@@ -304,3 +330,4 @@ class TestDataSeeder extends Seeder
         }
     }
 }
+
