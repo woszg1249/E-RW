@@ -22,6 +22,7 @@ class User extends Authenticatable
         'no_hp',
         'foto',
         'role',
+        'status_akun',
         'info_iuran',
         'nik',
         'rfid_uid',
@@ -68,6 +69,16 @@ class User extends Authenticatable
     public function isWarga(): bool
     {
         return strtoupper($this->role ?? '') === 'WARGA';
+    }
+
+    public function isApproved(): bool
+    {
+        return ($this->status_akun ?? 'aktif') === 'aktif';
+    }
+
+    public function isPending(): bool
+    {
+        return ($this->status_akun ?? 'aktif') === 'pending';
     }
 
     /**

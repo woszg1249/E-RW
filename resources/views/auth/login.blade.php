@@ -272,7 +272,24 @@
                 </div>
             @endif
 
-            @if($errors->any())
+            @if(session('pending_acc'))
+                <div class="alert alert-warning border border-warning alert-dismissible fade show rounded-3 p-3 small mb-3 text-dark shadow-sm" role="alert" style="background-color: #fef3c7;">
+                    <div class="d-flex align-items-start gap-2">
+                        <i class="fa-solid fa-user-clock fs-4 text-warning mt-1"></i>
+                        <div>
+                            <strong class="d-block text-dark fw-bold mb-1">Menunggu Persetujuan (ACC) Ketua RT</strong>
+                            <span class="text-secondary">{{ session('pending_acc') }}</span>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @elseif(session('info'))
+                <div class="alert alert-info alert-dismissible fade show rounded-3 p-2 small mb-3">
+                    <i class="fa-solid fa-circle-info me-1"></i> {{ session('info') }}
+                </div>
+            @endif
+
+            @if($errors->any() && !session('pending_acc'))
                 <div class="alert alert-danger alert-dismissible fade show rounded-3 p-2 small mb-3">
                     <i class="fa-solid fa-circle-exclamation me-1"></i> {{ $errors->first() }}
                 </div>

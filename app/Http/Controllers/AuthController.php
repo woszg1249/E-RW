@@ -47,6 +47,21 @@ class AuthController extends Controller
             }
 
             if ($passwordValid) {
+                // Periksa apakah akun warga masih berstatus pending ACC dari RT
+                if (($user->status_akun ?? 'aktif') === 'pending') {
+                    $pesanRt = $user->rt ? "Ketua RT {$user->rt}" : "Ketua RT setempat";
+                    return back()->withErrors([
+                        'login' => "Akun Anda ({$user->nama}) belum aktif dan sedang menunggu persetujuan (ACC) dari {$pesanRt}. Silakan hubungi pengurus RT Anda untuk aktivasi akun.",
+                    ])->with('pending_acc', "Pendaftaran akun Anda atas nama {$user->nama} (@{$user->username}) telah tersimpan di sistem, namun masih menunggu persetujuan (ACC) dari {$pesanRt} RW 19 sebelum dapat digunakan.")
+                      ->onlyInput('login');
+                }
+
+                if (($user->status_akun ?? 'aktif') === 'ditolak') {
+                    return back()->withErrors([
+                        'login' => "Pendaftaran akun Anda ditolak oleh pengurus RT setempat. Silakan hubungi Ketua RT untuk keterangan lebih lanjut.",
+                    ])->onlyInput('login');
+                }
+
                 Auth::login($user, $remember);
                 $request->session()->regenerate();
                 return redirect()->intended(route('dashboard'))
@@ -151,6 +166,7 @@ class AuthController extends Controller
             'rt' => $rt,
             'rw' => $validated['rw'] ?? '19',
             'role' => 'Warga',
+            'status_akun' => 'pending', // Wajib di-ACC oleh Ketua RT setempat
             'foto' => 'profile.jpg',
             'pekerjaan' => 'Belum / Tidak Bekerja',
             'agama' => 'Islam',
@@ -161,10 +177,10 @@ class AuthController extends Controller
             'tanggal_lahir' => '2000-01-01',
         ]);
 
-        Auth::login($user);
-        $request->session()->regenerate();
-
-        return redirect()->route('dashboard')->with('success', 'Pendaftaran berhasil! Selamat datang di RT RW Digital.');
+        // JANGAN langsung login. Arahkan ke halaman login dengan informasi menunggu ACC Ketua RT
+        return redirect()->route('login')
+            ->with('info', "Pendaftaran berhasil! Akun Anda sedang menunggu persetujuan (ACC) dari Ketua RT {$rt}. Anda dapat login setelah akun diaktifkan oleh pengurus RT.")
+            ->with('pending_acc', "Pendaftaran atas nama {$user->nama} (@{$user->username}) berhasil dikirim. Akun Anda saat ini berstatus 'Menunggu ACC' dari Ketua RT {$rt} RW 19.");
     }
 
     public function checkNik(Request $request)

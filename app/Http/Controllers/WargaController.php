@@ -25,6 +25,10 @@ class WargaController extends Controller
             $query->where('role', $request->role);
         }
 
+        if ($request->filled('status_akun')) {
+            $query->where('status_akun', $request->status_akun);
+        }
+
         if ($request->filled('search')) {
             $s = $request->search;
             $query->where(function ($q) use ($s) {
@@ -36,13 +40,14 @@ class WargaController extends Controller
             });
         }
 
-        $wargaList = $query->orderBy('nama', 'asc')->paginate(20)->withQueryString();
+        $wargaList = $query->orderByRaw("CASE WHEN status_akun = 'pending' THEN 0 ELSE 1 END")->orderBy('nama', 'asc')->paginate(20)->withQueryString();
         $totalWarga = User::where('role', 'Warga')->count();
         $totalWargaRt06 = User::where('role', 'Warga')->where('rt', '06')->count();
         $totalWargaRt07 = User::where('role', 'Warga')->where('rt', '07')->count();
+        $totalPending = User::where('role', 'Warga')->where('status_akun', 'pending')->count();
         $totalKK = User::whereNotNull('no_kk')->where('no_kk', '!=', '')->distinct()->count('no_kk');
 
-        return view('warga.index', compact('wargaList', 'totalWarga', 'totalWargaRt06', 'totalWargaRt07', 'totalKK'));
+        return view('warga.index', compact('wargaList', 'totalWarga', 'totalWargaRt06', 'totalWargaRt07', 'totalPending', 'totalKK'));
     }
 
     public function store(Request $request)
@@ -60,6 +65,7 @@ class WargaController extends Controller
             'rt' => 'nullable|string|max:10',
             'rw' => 'nullable|string|max:10',
             'role' => 'required|in:Admin,Warga',
+            'status_akun' => 'nullable|in:aktif,pending,ditolak',
             'status_keluarga' => 'nullable|string|max:50',
             'pekerjaan' => 'nullable|string|max:100',
             'status_perkawinan' => 'nullable|string|max:50',
@@ -82,6 +88,7 @@ class WargaController extends Controller
             'rt' => $validated['rt'] ?? '06',
             'rw' => $validated['rw'] ?? '19',
             'role' => $validated['role'],
+            'status_akun' => 'aktif',
             'foto' => 'profile.jpg',
             'status_keluarga' => $validated['status_keluarga'] ?? 'Kepala Keluarga',
             'pekerjaan' => $validated['pekerjaan'] ?? 'Belum / Tidak Bekerja',
@@ -111,6 +118,7 @@ class WargaController extends Controller
             'rt' => 'nullable|string|max:10',
             'rw' => 'nullable|string|max:10',
             'role' => 'required|in:Admin,Warga',
+            'status_akun' => 'nullable|in:aktif,pending,ditolak',
             'status_keluarga' => 'nullable|string|max:50',
             'pekerjaan' => 'nullable|string|max:100',
             'status_perkawinan' => 'nullable|string|max:50',
@@ -211,5 +219,44 @@ class WargaController extends Controller
         $kepala = $members->firstWhere('status_keluarga', 'Kepala Keluarga') ?? $members->first();
 
         return view('warga.cetak_kk', compact('members', 'kepala', 'no_kk'));
+    }
+
+    /**
+     * Setujui (ACC) pendaftaran warga baru oleh Ketua RT
+     */
+    public function accWarga($id)
+    {
+        $user = User::findOrFail($id);
+        $user->status_akun = 'aktif';
+        $user->save();
+
+        // Buat rekening Bank Digital Warga otomatis jika belum ada
+        if (class_exists(\App\Models\BankWargaRekening::class)) {
+            \App\Models\BankWargaRekening::firstOrCreate(
+                ['id_user' => $user->id],
+                [
+                    'nomor_rekening' => 'BW-1906-00' . str_pad($user->id, 3, '0', STR_PAD_LEFT),
+                    'nik' => $user->nik,
+                    'no_kk' => $user->no_kk,
+                    'saldo' => 0.00,
+                    'status' => 'aktif',
+                    'sumber_rekening' => 'otomatis_akun',
+                ]
+            );
+        }
+
+        return back()->with('success', "Akun warga atas nama {$user->nama} (@{$user->username}) berhasil di-ACC (disetujui). Warga bersangkutan sekarang sudah dapat login ke website.");
+    }
+
+    /**
+     * Tolak pendaftaran warga baru oleh Ketua RT
+     */
+    public function tolakWarga($id)
+    {
+        $user = User::findOrFail($id);
+        $user->status_akun = 'ditolak';
+        $user->save();
+
+        return back()->with('success', "Pendaftaran akun warga atas nama {$user->nama} (@{$user->username}) telah ditolak.");
     }
 }

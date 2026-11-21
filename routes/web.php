@@ -69,6 +69,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/warga', [WargaController::class, 'store'])->name('warga.store')->middleware('admin');
     Route::put('/warga/{id}', [WargaController::class, 'update'])->name('warga.update')->middleware('admin');
     Route::delete('/warga/{id}', [WargaController::class, 'destroy'])->name('warga.destroy')->middleware('admin');
+    Route::post('/warga/{id}/acc', [WargaController::class, 'accWarga'])->name('warga.acc')->middleware('admin');
+    Route::post('/warga/{id}/tolak', [WargaController::class, 'tolakWarga'])->name('warga.tolak')->middleware('admin');
     Route::post('/warga/{id}/rfid', [RfidController::class, 'updateRfid'])->name('warga.rfid.update')->middleware('admin');
     Route::get('/kk', [WargaController::class, 'kelolaKK'])->name('warga.kk');
     Route::get('/kk/{no_kk}/cetak', [WargaController::class, 'cetakKK'])->name('warga.kk.cetak');

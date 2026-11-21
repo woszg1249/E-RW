@@ -35,6 +35,26 @@
         </div>
     </div>
 
+    @if(isset($totalPending) && $totalPending > 0)
+    <!-- Banner Notifikasi Warga Baru Menunggu ACC RT -->
+    <div class="col-12">
+        <div class="alert alert-warning border border-warning shadow-sm d-flex flex-column flex-md-row align-items-md-center justify-content-between p-3 rounded-3 gap-3" role="alert" style="background-color: #fffbeb;">
+            <div class="d-flex align-items-center gap-3">
+                <div class="bg-warning text-dark p-2 rounded-circle d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
+                    <i class="fa-solid fa-user-clock fs-5"></i>
+                </div>
+                <div>
+                    <h6 class="fw-bold text-dark mb-0">Terdapat {{ $totalPending }} Pendaftaran Warga Baru Menunggu Persetujuan (ACC)!</h6>
+                    <small class="text-secondary">Warga baru yang mendaftar belum bisa login sampai Anda menyetujui (ACC) akunnya.</small>
+                </div>
+            </div>
+            <a href="{{ route('warga.index', ['status_akun' => 'pending']) }}" class="btn btn-warning btn-sm fw-bold px-3 py-2 rounded-pill text-dark shadow-sm">
+                <i class="fa-solid fa-list-check me-1"></i> Tinjau Warga Pending ({{ $totalPending }})
+            </a>
+        </div>
+    </div>
+    @endif
+
     <!-- Actions Bar -->
     <div class="col-12 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
         <div>
@@ -58,14 +78,22 @@
         <div class="card-custom p-4">
             <!-- Filter & Search -->
             <form action="{{ route('warga.index') }}" method="GET" class="row g-2 mb-4 bg-light p-3 rounded-3 border">
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <input type="text" name="search" class="form-control form-control-sm" placeholder="Cari nama, NIK, No KK, atau alamat..." value="{{ request('search') }}">
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <select name="rt" class="form-select form-select-sm">
-                        <option value="">Semua Wilayah RT (RW 19)</option>
-                        <option value="06" {{ request('rt') == '06' ? 'selected' : '' }}>RT 06 (Ketua: Dimas)</option>
-                        <option value="07" {{ request('rt') == '07' ? 'selected' : '' }}>RT 07 (Ketua: Bambang)</option>
+                        <option value="">Semua RT (RW 19)</option>
+                        <option value="06" {{ request('rt') == '06' ? 'selected' : '' }}>RT 06 (Dimas)</option>
+                        <option value="07" {{ request('rt') == '07' ? 'selected' : '' }}>RT 07 (Bambang)</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select name="status_akun" class="form-select form-select-sm">
+                        <option value="">Status Akun: Semua</option>
+                        <option value="pending" {{ request('status_akun') === 'pending' ? 'selected' : '' }}>⏳ Menunggu ACC RT</option>
+                        <option value="aktif" {{ request('status_akun') === 'aktif' ? 'selected' : '' }}>✅ Aktif Disetujui</option>
+                        <option value="ditolak" {{ request('status_akun') === 'ditolak' ? 'selected' : '' }}>❌ Ditolak</option>
                     </select>
                 </div>
                 <div class="col-md-2">
@@ -93,11 +121,10 @@
                             <th>Kartu RFID / e-KTP</th>
                             <th>L/P</th>
                             <th>Alamat & Wilayah RT</th>
-                            <th>No HP</th>
-                            <th>Status Keluarga</th>
+                            <th>Status Akun</th>
                             <th>Role</th>
                             @if(auth()->user()->isAdmin())
-                                <th class="text-center">Aksi</th>
+                                <th class="text-center">Aksi & Persetujuan RT</th>
                             @endif
                         </tr>
                     </thead>
@@ -163,13 +190,26 @@
                                 </td>
                                 <td class="small">{{ $w->kelamin === 'Laki-laki' ? 'L' : 'P' }}</td>
                                 <td class="small">
-                                    <div class="text-truncate" style="max-width: 220px;" title="{{ $w->alamat }}">{{ $w->alamat ?? '-' }}</div>
+                                    <div class="text-truncate" style="max-width: 200px;" title="{{ $w->alamat }}">{{ $w->alamat ?? '-' }}</div>
                                     <span class="badge bg-opacity-10 {{ $badgeRt }} border rounded-pill px-2 py-1 fw-bold">
                                         RT {{ $w->rt ?? '06' }} / RW {{ $w->rw ?? '19' }}
                                     </span>
                                 </td>
-                                <td class="small">{{ $w->no_hp ?? '-' }}</td>
-                                <td class="small">{{ $w->status_keluarga ?? 'Warga' }}</td>
+                                <td class="small">
+                                    @if(($w->status_akun ?? 'aktif') === 'pending')
+                                        <span class="badge bg-warning bg-opacity-25 text-dark border border-warning px-2 py-1 rounded-pill fw-bold">
+                                            <i class="fa-solid fa-clock me-1"></i>Menunggu ACC
+                                        </span>
+                                    @elseif(($w->status_akun ?? 'aktif') === 'ditolak')
+                                        <span class="badge bg-danger bg-opacity-10 text-danger border border-danger px-2 py-1 rounded-pill fw-bold">
+                                            <i class="fa-solid fa-ban me-1"></i>Ditolak
+                                        </span>
+                                    @else
+                                        <span class="badge bg-success bg-opacity-10 text-success border border-success px-2 py-1 rounded-pill fw-bold">
+                                            <i class="fa-solid fa-check me-1"></i>Aktif
+                                        </span>
+                                    @endif
+                                </td>
                                 <td>
                                     <span class="badge-role {{ $w->isAdmin() ? 'admin' : 'warga' }}">
                                         {{ $w->role }}
@@ -177,7 +217,21 @@
                                 </td>
                                 @if(auth()->user()->isAdmin())
                                     <td class="text-center">
-                                        <div class="d-flex justify-content-center gap-1">
+                                        <div class="d-flex justify-content-center align-items-center gap-1 flex-wrap">
+                                            @if(($w->status_akun ?? 'aktif') === 'pending')
+                                                <form action="{{ route('warga.acc', $w->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Setujui (ACC) pendaftaran warga {{ $w->nama }}?');">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-sm btn-success fw-bold py-1 px-2 rounded-2" title="ACC / Setujui Pendaftaran Warga">
+                                                        <i class="fa-solid fa-user-check me-1"></i> ACC RT
+                                                    </button>
+                                                </form>
+                                                <form action="{{ route('warga.tolak', $w->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Tolak pendaftaran warga {{ $w->nama }}?');">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger py-1 px-2 rounded-2" title="Tolak Pendaftaran">
+                                                        <i class="fa-solid fa-xmark"></i>
+                                                    </button>
+                                                </form>
+                                            @endif
                                             <button type="button" class="btn btn-sm btn-light border py-1 px-2 rounded-2" data-bs-toggle="modal" data-bs-target="#modalEditWarga{{ $w->id }}" title="Edit Warga">
                                                 <i class="fa-solid fa-pen-to-square text-primary"></i>
                                             </button>

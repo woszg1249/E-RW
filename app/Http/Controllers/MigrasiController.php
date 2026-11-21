@@ -91,3 +91,4 @@ class MigrasiController extends Controller
         }
     }
 }
+
