@@ -381,7 +381,8 @@
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold small text-secondary">Username Login <span class="text-danger">*</span></label>
-                    <input type="text" name="username" class="form-control" placeholder="username unik (tanpa spasi)" value="{{ old('username') }}" required>
+                    <input type="text" name="username" class="form-control" placeholder="contoh: budi_santoso atau budi.santoso" value="{{ old('username') }}" required>
+                    <div class="form-text small text-muted" style="font-size: 0.76rem;">Boleh huruf, angka, titik (.), strip (-), atau underscore (_). Tanpa spasi.</div>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label fw-semibold small text-secondary">Alamat Email <span class="text-danger">*</span></label>

@@ -84,9 +84,17 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
+        // Bersihkan input username & email dari spasi di awal/akhir
+        if ($request->has('username')) {
+            $request->merge(['username' => trim($request->username)]);
+        }
+        if ($request->has('email')) {
+            $request->merge(['email' => trim($request->email)]);
+        }
+
         $validated = $request->validate([
             'nama' => 'required|string|max:100',
-            'username' => 'required|string|max:50|unique:users,username|alpha_dash',
+            'username' => ['required', 'string', 'max:50', 'unique:users,username', 'regex:/^[a-zA-Z0-9._-]+$/'],
             'email' => 'required|email|max:100|unique:users,email',
             'password' => 'required|string|min:6|confirmed',
             'tipe_kk' => 'required|in:baru,gabung',
@@ -100,10 +108,12 @@ class AuthController extends Controller
             'rw' => 'nullable|string|max:10',
             'konfirmasi_kk' => 'nullable|string',
         ], [
+            'username.regex' => 'Username hanya boleh berisi huruf, angka, titik (.), strip (-), dan garis bawah (_). Tidak boleh menggunakan spasi atau simbol lain.',
+            'username.alpha_dash' => 'Username hanya boleh berisi huruf, angka, strip (-), dan garis bawah (_), tanpa spasi.',
+            'username.unique' => 'Username ini sudah digunakan, silakan pilih username lain.',
             'nik.digits' => 'NIK harus berjumlah 16 digit angka sesuai KTP.',
             'nik.unique' => 'NIK tersebut sudah terdaftar dalam sistem warga RW 19.',
             'no_kk.digits' => 'Nomor Kartu Keluarga (KK) harus berjumlah 16 digit angka.',
-            'username.unique' => 'Username ini sudah digunakan, silakan pilih username lain.',
             'email.unique' => 'Email ini sudah terdaftar.',
             'password.confirmed' => 'Konfirmasi password tidak cocok.',
         ]);
