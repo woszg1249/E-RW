@@ -177,5 +177,8 @@ class DatabaseSeeder extends Seeder
                 'tanggal' => now()->subDays(15)->format('Y-m-d'),
             ]);
         }
+
+        // 6. Seed Seluruh Data Uji Coba Modul Lengkap (Kegiatan, Posyandu, UMKM, Aset, Surat, Bank Sampah)
+        $this->call(TestDataSeeder::class);
     }
 }

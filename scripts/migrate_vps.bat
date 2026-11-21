@@ -5,3 +5,4 @@ echo   Target: https://e-rw.unique-monsters.my.id/
 echo ===================================================
 python "%~dp0migrate_vps.py" %*
 pause
+

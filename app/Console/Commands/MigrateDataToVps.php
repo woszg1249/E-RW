@@ -75,3 +75,4 @@ class MigrateDataToVps extends Command
         return Command::SUCCESS;
     }
 }
+

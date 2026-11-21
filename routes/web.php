@@ -9,6 +9,7 @@ use App\Http\Controllers\KegiatanController;
 use App\Http\Controllers\KeuanganController;
 use App\Http\Controllers\KoperasiController;
 use App\Http\Controllers\LandingController;
+use App\Http\Controllers\MigrasiController;
 use App\Http\Controllers\PosyanduController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RfidController;
@@ -126,4 +127,12 @@ Route::middleware('auth')->group(function () {
     // Profil Pengguna
     Route::get('/profil', [ProfileController::class, 'index'])->name('profil.index');
     Route::post('/profil', [ProfileController::class, 'update'])->name('profil.update');
+
+    // Manajemen Migrasi & Database (Khusus Admin)
+    Route::middleware('admin')->prefix('admin/migrasi')->group(function () {
+        Route::get('/', [MigrasiController::class, 'index'])->name('admin.migrasi');
+        Route::post('/run', [MigrasiController::class, 'runMigration'])->name('admin.migrasi.run');
+        Route::post('/seed', [MigrasiController::class, 'runSeeder'])->name('admin.migrasi.seed');
+        Route::post('/clear-cache', [MigrasiController::class, 'clearCache'])->name('admin.migrasi.cache');
+    });
 });

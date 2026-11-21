@@ -788,6 +788,12 @@
                 <i class="fa-solid fa-user-gear"></i>
                 <span>Profil Akun</span>
             </a>
+            @if(auth()->user()->isAdmin())
+            <a href="{{ route('admin.migrasi') }}" class="nav-item-custom {{ request()->routeIs('admin.migrasi*') ? 'active' : '' }}">
+                <i class="fa-solid fa-database"></i>
+                <span>Migrasi & Database</span>
+            </a>
+            @endif
 
             <div class="menu-header">Bantuan & Panduan</div>
             <a href="{{ route('panduan') }}" class="nav-item-custom {{ request()->routeIs('panduan') ? 'active' : '' }}">
