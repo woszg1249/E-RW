@@ -75,3 +75,30 @@ Aplikasi Web Terpadu Manajemen Administrasi, Keuangan, Kependudukan, dan Layanan
 - Upload foto profil dan penggantian password akun.
 - Proteksi CSRF, password hashing dengan bcrypt, dan middleware otorisasi Admin vs Warga.
 
+
+---
+
+## 🌐 Migrasi Data ke VPS Produksi
+
+Untuk menyinkronkan seluruh database (termasuk 110 akun warga, kas RT/RW, tagihan, koperasi, bank sampah, IoT RFID, posyandu, dan aset) ke server VPS produksi [https://e-rw.unique-monsters.my.id/](https://e-rw.unique-monsters.my.id/):
+
+### Opsi 1: Menggunakan Artisan Command (Rekomendasi)
+```bash
+php artisan vps:migrate-data
+```
+
+### Opsi 2: Menggunakan Skrip Otomatisasi Python / Batch
+```bash
+# Melalui script batch (Windows):
+scripts\migrate_vps.bat
+
+# Atau via Python langsung:
+python scripts/migrate_vps.py
+```
+
+Parameter opsional yang dapat diatur jika mengubah konfigurasi server:
+- `--host` : IP VPS (Default: `43.157.230.29`)
+- `--port` : Port SSH (Default: `22`)
+- `--user` : Username SSH (Default: `ubuntu`)
+- `--password` : Password SSH
+- `--sql` : Path dump database (Default: `database/keuangan_rt_vps.sql`)
