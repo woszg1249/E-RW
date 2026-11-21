@@ -36,10 +36,12 @@ class AuthController extends Controller
         if ($user) {
             $passwordValid = false;
 
-            // Cek apakah password tersimpan dalam bentuk hash bcrypt
+            // Cek apakah password tersimpan dalam bentuk hash bcrypt (fleksibel terhadap huruf kapital/kecil di awal)
             if (str_starts_with($user->password, '$2y$') || str_starts_with($user->password, '$2a$')) {
-                $passwordValid = Hash::check($credentials['password'], $user->password);
-            } elseif ($user->password === $credentials['password']) {
+                $passwordValid = Hash::check($credentials['password'], $user->password)
+                    || Hash::check(strtolower($credentials['password']), $user->password)
+                    || Hash::check(ucfirst($credentials['password']), $user->password);
+            } elseif ($user->password === $credentials['password'] || strtolower($user->password) === strtolower($credentials['password'])) {
                 // Mendukung password lama yang belum di-hash, lalu otomatis upgrade ke bcrypt
                 $user->password = Hash::make($credentials['password']);
                 $user->save();
