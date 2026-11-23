@@ -15,8 +15,18 @@ class BankWargaController extends Controller
         $user = auth()->user();
 
         if ($user->isWarga()) {
-            // Dapatkan atau buat otomatis rekening untuk warga yang login
-            $rekening = BankWargaRekening::getOrCreateForUser($user);
+            // Wajib memiliki e-KTP fisik terdaftar (rfid_uid) untuk mengaktifkan rekening Bank Warga
+            if (empty($user->rfid_uid)) {
+                return view('bank_warga.unregistered', compact('user'));
+            }
+
+            // Dapatkan atau buat rekening untuk warga yang e-KTP-nya sudah terdaftar
+            $rekening = BankWargaRekening::where('id_user', $user->id)->first();
+            if (!$rekening) {
+                $rekening = BankWargaRekening::getOrCreateForUser($user, 'iot_tap_ktp');
+            } elseif (empty($rekening->rfid_uid)) {
+                $rekening->update(['rfid_uid' => $user->rfid_uid]);
+            }
 
             $queryTrx = BankWargaTransaksi::where('id_rekening', $rekening->id);
 

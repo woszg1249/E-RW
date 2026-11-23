@@ -58,7 +58,7 @@
                     </div>
                 </div>
                 <span class="badge bg-success bg-opacity-25 border border-success border-opacity-50 text-white rounded-pill px-3 py-1 small">
-                    <i class="fa-solid fa-wifi me-1"></i> IoT e-KTP Aktif
+                    <i class="fa-solid fa-id-card me-1"></i> e-KTP: {{ $rekening->rfid_uid ?? (auth()->user()->rfid_uid ?? 'Terdaftar') }}
                 </span>
             </div>
 
@@ -96,9 +96,6 @@
                     <div class="d-flex gap-2">
                         <button class="btn btn-primary-custom rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#modalTopUp">
                             <i class="fa-solid fa-plus me-1"></i> Top-Up Saldo
-                        </button>
-                        <button class="btn btn-outline-dark rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#modalSimulasiIoT">
-                            <i class="fa-solid fa-id-card me-1"></i> Tap e-KTP IoT
                         </button>
                     </div>
                 </div>
@@ -358,108 +355,12 @@
     </div>
 </div>
 
-<!-- Modal Simulasi Tap e-KTP IoT Reader -->
-<div class="modal fade" id="modalSimulasiIoT" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 rounded-4 shadow">
-            <div class="modal-header border-0 pb-0">
-                <div class="d-flex align-items-center gap-2">
-                    <div class="bg-primary bg-opacity-10 text-primary p-2 rounded-circle">
-                        <i class="fa-solid fa-nfc-directional fs-5"></i>
-                    </div>
-                    <div>
-                        <h5 class="modal-title fw-bold mb-0">Simulasi Tap e-KTP (IoT Reader)</h5>
-                        <p class="text-muted small mb-0">Uji coba simulasi alat RFID IoT Reader di Pos RW/RT</p>
-                    </div>
-                </div>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="text-center py-3">
-                    <div class="mb-3">
-                        <i class="fa-solid fa-id-card-clip fs-1 text-primary animate__animated animate__pulse animate__infinite"></i>
-                    </div>
-                    <h6 class="fw-bold">Alat IoT RFID Reader Siap Menerima Tap</h6>
-                    <p class="text-muted small px-3">
-                        Setiap warga yang menempelkan e-KTP atau kartu RFID terdaftar ke mesin IoT pos RT, sistem otomatis memverifikasi saldo dan rekening bank warga.
-                    </p>
-                </div>
-
-                <div class="p-3 bg-light rounded-3 mb-3 border">
-                    <div class="row g-2 small">
-                        <div class="col-4 text-muted">ID Perangkat:</div>
-                        <div class="col-8 fw-semibold"><code>IOT-BW-01 (Pos RW 19)</code></div>
-                        <div class="col-4 text-muted">Kartu Anda:</div>
-                        <div class="col-8 fw-semibold">{{ auth()->user()->rfid_uid ?? 'UID-KTP-' . auth()->id() . '882' }}</div>
-                        <div class="col-4 text-muted">NIK Warga:</div>
-                        <div class="col-8 fw-semibold">{{ auth()->user()->nik ?? '-' }}</div>
-                        <div class="col-4 text-muted">No Rekening:</div>
-                        <div class="col-8 fw-bold text-success">{{ $rekening->nomor_rekening }}</div>
-                    </div>
-                </div>
-
-                <div id="iotTapResult" class="d-none alert alert-success small mb-0">
-                    <!-- Dynamic Result -->
-                </div>
-            </div>
-            <div class="modal-footer border-0 pt-0">
-                <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Tutup</button>
-                <button type="button" class="btn btn-primary rounded-pill px-4" id="btnSimulasiTap" onclick="simulasikanTapIoT('{{ auth()->user()->rfid_uid ?? 'UID-KTP-' . auth()->id() . '882' }}', '{{ auth()->user()->nik }}')">
-                    <i class="fa-solid fa-fingerprint me-1"></i> Tap Kartu Sekarang
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
 @endsection
 
 @section('scripts')
 <script>
     function setNominalTopUp(val) {
         document.getElementById('inputJumlahTopUp').value = val;
-    }
-
-    function simulasikanTapIoT(rfid, nik) {
-        const btn = document.getElementById('btnSimulasiTap');
-        const resDiv = document.getElementById('iotTapResult');
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Membaca Kartu...';
-
-        fetch("{{ route('api.iot.bank_warga.tap') }}", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify({
-                rfid_uid: rfid,
-                nik: nik,
-                device_id: 'IOT-BW-01-SIMULATOR'
-            })
-        })
-        .then(res => res.json())
-        .then(data => {
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fa-solid fa-fingerprint me-1"></i> Tap Lagi';
-            resDiv.classList.remove('d-none');
-            if (data.status === 'success') {
-                resDiv.className = 'alert alert-success small mb-0';
-                resDiv.innerHTML = `<strong><i class="fa-solid fa-check-circle me-1"></i> ${data.message}</strong><br>
-                Nama: <b>${data.data.nama}</b><br>
-                No Rek: <b>${data.data.nomor_rekening}</b><br>
-                Saldo Terkini: <b class="text-success">${data.data.saldo_format}</b> (Status: ${data.data.status_rekening})`;
-            } else {
-                resDiv.className = 'alert alert-danger small mb-0';
-                resDiv.innerHTML = `<i class="fa-solid fa-triangle-exclamation me-1"></i> ${data.message}`;
-            }
-        })
-        .catch(err => {
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fa-solid fa-fingerprint me-1"></i> Tap Kartu Sekarang';
-            resDiv.classList.remove('d-none');
-            resDiv.className = 'alert alert-danger small mb-0';
-            resDiv.innerHTML = 'Gagal menghubungi IoT Reader simulator: ' + err.message;
-        });
     }
 </script>
 @endsection

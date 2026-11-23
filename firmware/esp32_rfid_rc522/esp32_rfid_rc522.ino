@@ -35,8 +35,8 @@
 #include <MFRC522.h>
 
 // ========== KONFIGURASI WIFI & SERVER ==========
-const char* WIFI_SSID     = "NAMA_WIFI_ANDA";       // Ganti dengan SSID WiFi Anda
-const char* WIFI_PASSWORD = "PASSWORD_WIFI_ANDA";   // Ganti dengan Password WiFi Anda
+const char* WIFI_SSID     = "Siti Aniroh-2G";       // Ganti dengan SSID WiFi Anda
+const char* WIFI_PASSWORD = "ridzigoblokidiotmatiajalu";   // Ganti dengan Password WiFi Anda
 
 // URL Endpoint Backend E-RW
 const char* SERVER_URL    = "https://e-rw.unique-monsters.my.id/api/iot/rfid/tap";

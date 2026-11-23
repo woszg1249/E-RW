@@ -74,11 +74,14 @@ class RfidController extends Controller
         // KASUS 1: Kartu SUDAH terhubung ke warga
         if ($user) {
             $saldoBankWarga = 0;
+            $nomorRekening = '-';
             if (Schema::hasTable('bank_warga_rekening')) {
-                $rek = BankWargaRekening::where('id_user', $user->id)->first();
-                if ($rek) {
-                    $saldoBankWarga = (float) $rek->saldo;
+                $rek = BankWargaRekening::getOrCreateForUser($user, 'iot_tap_ktp');
+                if (empty($rek->rfid_uid)) {
+                    $rek->update(['rfid_uid' => $cleanUid]);
                 }
+                $saldoBankWarga = (float) $rek->saldo;
+                $nomorRekening = $rek->nomor_rekening;
             }
 
             $tunggakanIuran = 0;
