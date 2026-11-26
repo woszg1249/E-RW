@@ -422,11 +422,15 @@ class RfidController extends Controller
             ? User::orderBy('nama')->get(['id', 'nama', 'nik', 'rt', 'rw', 'rfid_uid'])
             : collect();
 
+        $registeredCards = $user->isAdmin()
+            ? User::whereNotNull('rfid_uid')->where('rfid_uid', '!=', '')->orderBy('nama')->get(['id', 'nama', 'nik', 'rt', 'rw', 'rfid_uid'])
+            : ($user->rfid_uid ? collect([$user]) : collect());
+
         $deviceOnline = (bool) Cache::get('rfid_device_online', false);
         $deviceInfo = Cache::get('rfid_device_info', []);
         $recentScans = $this->getRecentScans();
 
-        return view('rfid.portal', compact('user', 'wargaList', 'deviceOnline', 'deviceInfo', 'recentScans'));
+        return view('rfid.portal', compact('user', 'wargaList', 'registeredCards', 'deviceOnline', 'deviceInfo', 'recentScans'));
     }
 
     /**
@@ -493,6 +497,7 @@ class RfidController extends Controller
                     'rfid_uid' => $row->rfid_uid,
                     'device_id' => $row->device_id,
                     'status' => $row->status,
+                    'id_user' => $row->id_user,
                     'nama' => $row->user ? $row->user->nama : null,
                     'nik' => $row->user ? $row->user->nik : null,
                     'rt_rw' => $row->user ? "RT {$row->user->rt}/RW {$row->user->rw}" : null,
@@ -500,5 +505,109 @@ class RfidController extends Controller
                 ];
             })
             ->values();
+    }
+
+    /**
+     * CRUD Create: Daftarkan / Tambah Kartu RFID baru
+     */
+    public function storeCard(Request $request)
+    {
+        $request->validate([
+            'rfid_uid' => 'required|string|max:64',
+            'user_id' => 'nullable|exists:users,id',
+        ]);
+
+        $cleanUid = $this->normalizeUid($request->input('rfid_uid'));
+        if (!$cleanUid) {
+            return back()->with('error', 'Format UID kartu tidak valid.');
+        }
+
+        $targetUser = (auth()->user()->isAdmin() && $request->filled('user_id'))
+            ? User::findOrFail($request->input('user_id'))
+            : auth()->user();
+
+        $duplicate = User::where('rfid_uid', $cleanUid)->where('id', '!=', $targetUser->id)->first();
+        if ($duplicate) {
+            return back()->with('error', "UID {$cleanUid} sudah terdaftar milik {$duplicate->nama}.");
+        }
+
+        $targetUser->update(['rfid_uid' => $cleanUid]);
+
+        if (Schema::hasTable('bank_warga_rekening')) {
+            BankWargaRekening::where('id_user', $targetUser->id)->update(['rfid_uid' => $cleanUid]);
+        }
+
+        Cache::forget('latest_rfid_scan');
+
+        return back()->with('success', "Kartu RFID UID [ {$cleanUid} ] berhasil ditambahkan untuk {$targetUser->nama}.");
+    }
+
+    /**
+     * CRUD Update: Ubah UID Kartu RFID terdaftar
+     */
+    public function updateCard(Request $request, $id)
+    {
+        $targetUser = User::findOrFail($id);
+        if (!auth()->user()->isAdmin() && auth()->id() !== $targetUser->id) {
+            abort(403, 'Anda tidak berhak mengubah kartu warga lain.');
+        }
+
+        $request->validate([
+            'rfid_uid' => 'required|string|max:64',
+        ]);
+
+        $cleanUid = $this->normalizeUid($request->input('rfid_uid'));
+        if (!$cleanUid) {
+            return back()->with('error', 'Format UID kartu tidak valid.');
+        }
+
+        $duplicate = User::where('rfid_uid', $cleanUid)->where('id', '!=', $targetUser->id)->first();
+        if ($duplicate) {
+            return back()->with('error', "UID {$cleanUid} sudah dipakai oleh {$duplicate->nama}.");
+        }
+
+        $targetUser->update(['rfid_uid' => $cleanUid]);
+
+        if (Schema::hasTable('bank_warga_rekening')) {
+            BankWargaRekening::where('id_user', $targetUser->id)->update(['rfid_uid' => $cleanUid]);
+        }
+
+        Cache::forget('latest_rfid_scan');
+
+        return back()->with('success', "UID Kartu {$targetUser->nama} berhasil diperbarui menjadi [ {$cleanUid} ].");
+    }
+
+    /**
+     * CRUD Delete: Hapus / Lepas Kartu RFID dari user
+     */
+    public function destroyCard($id)
+    {
+        $targetUser = User::findOrFail($id);
+        if (!auth()->user()->isAdmin() && auth()->id() !== $targetUser->id) {
+            abort(403, 'Anda tidak berhak menghapus kartu warga lain.');
+        }
+
+        $targetUser->update(['rfid_uid' => null]);
+
+        if (Schema::hasTable('bank_warga_rekening')) {
+            BankWargaRekening::where('id_user', $targetUser->id)->update(['rfid_uid' => null]);
+        }
+
+        return back()->with('success', "Kartu RFID milik {$targetUser->nama} berhasil dihapus.");
+    }
+
+    /**
+     * CRUD Delete: Hapus 1 baris log riwayat tap kartu
+     */
+    public function destroyScan($id)
+    {
+        $scan = IotKoperasiScan::findOrFail($id);
+        if (!auth()->user()->isAdmin() && $scan->id_user !== auth()->id()) {
+            abort(403, 'Anda tidak berhak menghapus riwayat scan ini.');
+        }
+
+        $scan->delete();
+
+        return back()->with('success', 'Riwayat tap kartu berhasil dihapus.');
     }
 }
