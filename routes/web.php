@@ -126,9 +126,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/aset/pinjam', [AsetController::class, 'pinjam'])->name('aset.pinjam');
     Route::post('/aset/pinjam/{id}/status', [AsetController::class, 'updateStatusPeminjaman'])->name('aset.pinjam.status')->middleware('admin');
 
-    // Profil Pengguna
+    // Profil Pengguna & Self-Pairing e-KTP IoT
     Route::get('/profil', [ProfileController::class, 'index'])->name('profil.index');
     Route::post('/profil', [ProfileController::class, 'update'])->name('profil.update');
+    Route::post('/profil/rfid/pair', [RfidController::class, 'pairSelf'])->name('profil.rfid.pair');
+    Route::post('/profil/rfid/unbind', [RfidController::class, 'unbindSelf'])->name('profil.rfid.unbind');
 
     // Manajemen Migrasi & Database (Khusus Admin)
     Route::middleware('admin')->prefix('admin/migrasi')->group(function () {

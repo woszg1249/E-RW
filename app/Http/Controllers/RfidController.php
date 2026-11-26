@@ -94,7 +94,10 @@ class RfidController extends Controller
             return response()->json([
                 'status' => 'success',
                 'registered' => true,
-                'message' => "Kartu terverifikasi milik warga: {$user->nama}",
+                'access_granted' => true,
+                'buka_portal' => true,
+                'akses_portal' => 'DIIZINKAN',
+                'message' => "Akses Portal Perumahan DIIZINKAN untuk warga: {$user->nama}",
                 'rfid_uid' => $cleanUid,
                 'data' => [
                     'user_id' => $user->id,
@@ -110,18 +113,21 @@ class RfidController extends Controller
                     'tagihan_belum_lunas' => $tunggakanIuran,
                     'scanned_at' => now()->toIso8601String(),
                 ],
-            ]);
+            ], 200);
         }
 
-        // KASUS 2: Kartu BELUM terhubung (Kartu Baru)
+        // KASUS 2: Kartu BELUM terhubung (Proteksi Akses Portal Ditolak)
         return response()->json([
-            'status' => 'unregistered',
+            'status' => 'denied',
             'registered' => false,
-            'message' => "Kartu UID {$cleanUid} belum terdaftar. Silakan hubungkan ke akun warga di portal web E-RW.",
+            'access_granted' => false,
+            'buka_portal' => false,
+            'akses_portal' => 'DITOLAK',
+            'message' => "AKSES DITOLAK! Kartu e-KTP UID {$cleanUid} belum terdaftar di akun warga E-RW.",
             'rfid_uid' => $cleanUid,
             'device_id' => $deviceId,
-            'hint' => 'Buka menu Data Warga di web lalu tempelkan kartu ini untuk pairing otomatis.',
-        ]);
+            'hint' => 'Login ke web E-RW -> Profil Akun lalu scan e-KTP untuk mendaftarkan kartu Anda.',
+        ], 403);
     }
 
     /**
@@ -225,5 +231,64 @@ class RfidController extends Controller
 
             return back()->with('success', "Kartu RFID warga {$user->nama} berhasil dilepas.");
         }
+    }
+
+    /**
+     * Self-Pairing e-KTP untuk user yang sedang login
+     * Method: POST /profil/rfid/pair
+     */
+    public function pairSelf(Request $request)
+    {
+        $user = auth()->user();
+        $cleanUid = $this->normalizeUid($request->input('rfid_uid'));
+
+        if (!$cleanUid) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'UID kartu e-KTP tidak valid.',
+            ], 400);
+        }
+
+        // Proteksi: Tolak jika UID sudah terdaftar pada warga lain
+        $existingOwner = User::where('rfid_uid', $cleanUid)
+            ->where('id', '!=', $user->id)
+            ->first();
+
+        if ($existingOwner) {
+            return response()->json([
+                'status' => 'error',
+                'message' => "Kartu e-KTP UID {$cleanUid} sudah terdaftar atas nama warga lain ({$existingOwner->nama}).",
+            ], 409);
+        }
+
+        $user->update(['rfid_uid' => $cleanUid]);
+
+        if (Schema::hasTable('bank_warga_rekening')) {
+            BankWargaRekening::where('id_user', $user->id)->update(['rfid_uid' => $cleanUid]);
+        }
+
+        Cache::forget('latest_rfid_scan');
+
+        return response()->json([
+            'status' => 'success',
+            'message' => "e-KTP UID {$cleanUid} berhasil didaftarkan ke akun {$user->nama}.",
+            'rfid_uid' => $cleanUid,
+        ]);
+    }
+
+    /**
+     * Lepas kartu e-KTP dari user yang sedang login
+     * Method: POST /profil/rfid/unbind
+     */
+    public function unbindSelf()
+    {
+        $user = auth()->user();
+        $user->update(['rfid_uid' => null]);
+
+        if (Schema::hasTable('bank_warga_rekening')) {
+            BankWargaRekening::where('id_user', $user->id)->update(['rfid_uid' => null]);
+        }
+
+        return back()->with('success', 'Kartu e-KTP berhasil dilepas dari akun Anda.');
     }
 }
