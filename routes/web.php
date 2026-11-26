@@ -110,6 +110,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/bank-warga/topup', [BankWargaController::class, 'topup'])->name('bank-warga.topup');
     Route::post('/bank-warga/daftar', [BankWargaController::class, 'daftarOtomatis'])->name('bank-warga.daftar');
 
+    // Portal IoT & Daftar RFID Real-Time
+    Route::get('/portal-iot', [RfidController::class, 'portalIot'])->name('portal-iot.index');
+    Route::get('/portal-iot/status', [RfidController::class, 'portalStatus'])->name('portal-iot.status');
+    Route::post('/portal-iot/pair-warga', [RfidController::class, 'adminPairAjax'])->name('portal-iot.pair-warga')->middleware('admin');
+
     // UMKM Warga
     Route::get('/umkm', [UmkmController::class, 'index'])->name('umkm.index');
     Route::post('/umkm', [UmkmController::class, 'store'])->name('umkm.store');

@@ -779,6 +779,10 @@
                 <i class="fa-solid fa-building-columns"></i>
                 <span>Bank Digital Warga</span>
             </a>
+            <a href="{{ route('portal-iot.index') }}" class="nav-item-custom {{ request()->routeIs('portal-iot.index') ? 'active' : '' }}">
+                <i class="fa-solid fa-wifi"></i>
+                <span>Portal IoT RFID</span>
+            </a>
             <a href="{{ route('posyandu.index') }}" class="nav-item-custom {{ request()->routeIs('posyandu.index') ? 'active' : '' }}">
                 <i class="fa-solid fa-baby"></i>
                 <span>Posyandu Balita</span>

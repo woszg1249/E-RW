@@ -410,4 +410,95 @@ class RfidController extends Controller
             'status' => 'online',
         ], 200);
     }
+
+    /**
+     * Halaman Portal IoT & Daftar RFID Real-Time
+     * Method: GET /portal-iot
+     */
+    public function portalIot()
+    {
+        $user = auth()->user();
+        $wargaList = $user->isAdmin()
+            ? User::orderBy('nama')->get(['id', 'nama', 'nik', 'rt', 'rw', 'rfid_uid'])
+            : collect();
+
+        $deviceOnline = (bool) Cache::get('rfid_device_online', false);
+        $deviceInfo = Cache::get('rfid_device_info', []);
+        $recentScans = $this->getRecentScans();
+
+        return view('rfid.portal', compact('user', 'wargaList', 'deviceOnline', 'deviceInfo', 'recentScans'));
+    }
+
+    /**
+     * Endpoint JSON Polling Real-Time untuk Portal IoT
+     * Method: GET /portal-iot/status
+     */
+    public function portalStatus()
+    {
+        return response()->json([
+            'device_online' => (bool) Cache::get('rfid_device_online', false),
+            'device_info' => Cache::get('rfid_device_info'),
+            'latest_scan' => Cache::get('latest_rfid_scan'),
+            'recent_scans' => $this->getRecentScans(),
+        ]);
+    }
+
+    /**
+     * Admin pairing e-KTP ke warga terpilih via AJAX di Portal IoT
+     * Method: POST /portal-iot/pair-warga
+     */
+    public function adminPairAjax(Request $request)
+    {
+        $request->validate([
+            'rfid_uid' => 'required|string',
+            'user_id' => 'required|exists:users,id',
+        ]);
+
+        $cleanUid = $this->normalizeUid($request->input('rfid_uid'));
+        if (!$cleanUid) {
+            return response()->json(['status' => 'error', 'message' => 'UID kartu tidak valid.'], 400);
+        }
+
+        $targetUser = User::findOrFail($request->input('user_id'));
+
+        User::where('rfid_uid', $cleanUid)->where('id', '!=', $targetUser->id)->update(['rfid_uid' => null]);
+        $targetUser->update(['rfid_uid' => $cleanUid]);
+
+        if (Schema::hasTable('bank_warga_rekening')) {
+            BankWargaRekening::where('id_user', $targetUser->id)->update(['rfid_uid' => $cleanUid]);
+        }
+
+        Cache::forget('latest_rfid_scan');
+
+        return response()->json([
+            'status' => 'success',
+            'message' => "Kartu UID {$cleanUid} berhasil didaftarkan ke warga {$targetUser->nama}.",
+            'rfid_uid' => $cleanUid,
+        ]);
+    }
+
+    private function getRecentScans()
+    {
+        if (!Schema::hasTable('iot_koperasi_scans')) {
+            return [];
+        }
+
+        return IotKoperasiScan::with('user:id,nama,nik,rt,rw')
+            ->orderByDesc('scanned_at')
+            ->limit(10)
+            ->get()
+            ->map(function ($row) {
+                return [
+                    'id' => $row->id,
+                    'rfid_uid' => $row->rfid_uid,
+                    'device_id' => $row->device_id,
+                    'status' => $row->status,
+                    'nama' => $row->user ? $row->user->nama : null,
+                    'nik' => $row->user ? $row->user->nik : null,
+                    'rt_rw' => $row->user ? "RT {$row->user->rt}/RW {$row->user->rw}" : null,
+                    'waktu' => $row->scanned_at ? \Carbon\Carbon::parse($row->scanned_at)->format('d/m/Y H:i:s') : '-',
+                ];
+            })
+            ->values();
+    }
 }
