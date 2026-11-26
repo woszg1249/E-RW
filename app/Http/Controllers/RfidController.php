@@ -291,4 +291,123 @@ class RfidController extends Controller
 
         return back()->with('success', 'Kartu e-KTP berhasil dilepas dari akun Anda.');
     }
+
+    /**
+     * Validasi keamanan header X-Device-Key atau Authorization Bearer untuk ESP32 Kelompok
+     */
+    private function isValidDeviceKey(Request $request): bool
+    {
+        $expectedKey = 'smartrw-rfid-device';
+        $headerKey = $request->header('X-Device-Key');
+        $bearerToken = $request->bearerToken();
+
+        return $headerKey === $expectedKey || $bearerToken === $expectedKey;
+    }
+
+    /**
+     * Endpoint API ESP32 Kelompok: POST /api/rfid/tap
+     */
+    public function tap(Request $request)
+    {
+        if (!$this->isValidDeviceKey($request)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized: X-Device-Key atau Bearer token tidak valid.',
+            ], 401);
+        }
+
+        $request->validate([
+            'uid' => 'required|string',
+            'device_id' => 'nullable|string',
+        ]);
+
+        $uid = $this->normalizeUid((string) $request->input('uid'));
+        $deviceId = $request->input('device_id', 'esp32-scanner');
+
+        if (!$uid) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Format UID tidak valid.',
+            ], 422);
+        }
+
+        // Cari warga pemilik kartu
+        $user = User::where('rfid_uid', $uid)->first();
+
+        // Simpan sementara di Cache untuk auto-fill & real-time listener web E-RW
+        Cache::put('last_rfid_uid', $uid, 30);
+        Cache::put('latest_rfid_scan', [
+            'rfid_uid' => $uid,
+            'device_id' => $deviceId,
+            'scanned_at' => now()->toIso8601String(),
+            'scanned_time' => now()->format('H:i:s'),
+            'registered' => (bool) $user,
+            'user_nama' => $user ? $user->nama : null,
+            'user_nik' => $user ? $user->nik : null,
+            'user_id' => $user ? $user->id : null,
+        ], now()->addMinutes(5));
+
+        // Catat ke log IoT
+        if (Schema::hasTable('iot_koperasi_scans')) {
+            try {
+                IotKoperasiScan::create([
+                    'device_id' => $deviceId,
+                    'nik' => $user ? $user->nik : null,
+                    'rfid_uid' => $uid,
+                    'id_user' => $user ? $user->id : null,
+                    'status' => $user ? 'processed' : 'unregistered',
+                    'scanned_at' => now(),
+                ]);
+            } catch (\Throwable $e) {
+            }
+        }
+
+        if ($user && Schema::hasTable('bank_warga_rekening')) {
+            $rek = BankWargaRekening::getOrCreateForUser($user, 'iot_tap_ktp');
+            if (empty($rek->rfid_uid)) {
+                $rek->update(['rfid_uid' => $uid]);
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => $user
+                ? "Kartu berhasil dibaca ({$user->nama})"
+                : 'Kartu berhasil dibaca',
+            'uid' => $uid,
+            'device_id' => $deviceId,
+            'registered' => (bool) $user,
+            'user' => $user ? [
+                'id' => $user->id,
+                'nama' => $user->nama,
+                'nik' => $user->nik,
+                'rt' => $user->rt,
+                'rw' => $user->rw,
+            ] : null,
+        ], 200);
+    }
+
+    /**
+     * Endpoint API ESP32 Kelompok: POST /api/rfid/heartbeat
+     */
+    public function heartbeat(Request $request)
+    {
+        if (!$this->isValidDeviceKey($request)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized: X-Device-Key atau Bearer token tidak valid.',
+            ], 401);
+        }
+
+        Cache::put('rfid_device_online', true, 15);
+        Cache::put('rfid_device_info', [
+            'device_id' => $request->input('device_id'),
+            'ip' => $request->input('ip'),
+            'last_seen' => now()->toIso8601String(),
+        ], 15);
+
+        return response()->json([
+            'status' => 'online',
+        ], 200);
+    }
 }

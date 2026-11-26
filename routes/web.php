@@ -46,6 +46,10 @@ Route::post('/api/iot/rfid/tap', [RfidController::class, 'apiTap'])->name('api.i
 Route::post('/api/iot/rfid/pair', [RfidController::class, 'apiPair'])->name('api.iot.rfid.pair');
 Route::get('/api/iot/rfid/latest', [RfidController::class, 'latestScan'])->name('api.iot.rfid.latest');
 
+// Endpoint IoT Kelompok ESP32 (Final Firmware)
+Route::post('/api/rfid/tap', [RfidController::class, 'tap'])->name('api.rfid.tap');
+Route::post('/api/rfid/heartbeat', [RfidController::class, 'heartbeat'])->name('api.rfid.heartbeat');
+
 // Protected Routes (Warga & Admin)
 Route::middleware('auth')->group(function () {
     // Dashboard
