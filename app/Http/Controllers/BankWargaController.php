@@ -87,13 +87,18 @@ class BankWargaController extends Controller
             ->orderBy('nama', 'asc')
             ->get();
 
+        $deviceOnline = (bool) \Illuminate\Support\Facades\Cache::get('rfid_device_online', false);
+        $deviceInfo = \Illuminate\Support\Facades\Cache::get('rfid_device_info', []);
+
         return view('bank_warga.admin_index', compact(
             'rekeningList',
             'totalSaldoSeluruhWarga',
             'totalNasabah',
             'totalTrxHariIni',
             'totalPencairanSampah',
-            'daftarWargaBelumPunya'
+            'daftarWargaBelumPunya',
+            'deviceOnline',
+            'deviceInfo'
         ));
     }
 

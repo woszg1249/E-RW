@@ -17,8 +17,67 @@
                     <i class="fa-solid fa-wifi me-1"></i> Portal IoT Tap e-KTP
                 </a>
                 <button class="btn btn-primary-custom rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#modalBukaRekeningBaru">
-                    <i class="fa-solid fa-user-plus me-1"></i> Buka Rekening (Tap e-KTP)
+                    <i class="fa-solid fa-user-plus me-1"></i> Buka Rekening Warga (Scan e-KTP)
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Alat ESP32 & Alur Aktivasi Rekening -->
+    <div class="col-12">
+        <div class="row g-3">
+            <div class="col-lg-5">
+                <div class="card-custom p-3 h-100">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <h6 class="fw-bold mb-0"><i class="fa-solid fa-microchip text-success me-2"></i>Status Alat ESP32</h6>
+                        <span id="adminBadgeDeviceStatus" class="badge {{ ($deviceOnline ?? false) ? 'bg-success' : 'bg-secondary' }} rounded-pill px-3 py-2">
+                            <i class="fa-solid fa-circle me-1" style="font-size: 0.6rem;"></i>
+                            <span id="adminTxtDeviceStatus">{{ ($deviceOnline ?? false) ? 'ESP32 ONLINE' : 'STANDBY / OFFLINE' }}</span>
+                        </span>
+                    </div>
+                    <div class="bg-light rounded-3 p-3 small">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted">Device ID:</span>
+                            <span id="adminTxtDeviceId" class="fw-bold font-monospace">{{ $deviceInfo['device_id'] ?? '-' }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted">IP Lokal ESP32:</span>
+                            <span id="adminTxtDeviceIp" class="fw-bold font-monospace">{{ $deviceInfo['ip'] ?? '-' }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Petugas Login:</span>
+                            <span class="fw-bold text-success">{{ auth()->user()->nama }} ({{ auth()->user()->role }})</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-7">
+                <div class="card-custom p-3 h-100 d-flex flex-column justify-content-center">
+                    <h6 class="fw-bold mb-2"><i class="fa-solid fa-circle-info text-primary me-2"></i>Prosedur Buka Rekening Bank Warga (Wajib Scan e-KTP)</h6>
+                    <div class="row g-2 small">
+                        <div class="col-md-4">
+                            <div class="bg-light rounded-3 p-2 h-100">
+                                <span class="badge bg-primary rounded-pill mb-1">1</span>
+                                <div class="fw-bold">Cek ESP32 Online</div>
+                                <div class="text-muted" style="font-size: 0.76rem;">Pastikan status alat di samping menyala hijau <strong>ESP32 ONLINE</strong>.</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="bg-light rounded-3 p-2 h-100">
+                                <span class="badge bg-primary rounded-pill mb-1">2</span>
+                                <div class="fw-bold">Pilih Nama Warga</div>
+                                <div class="text-muted" style="font-size: 0.76rem;">Klik tombol <strong>Buka Rekening Warga (Scan e-KTP)</strong> dan pilih warga.</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="bg-light rounded-3 p-2 h-100">
+                                <span class="badge bg-primary rounded-pill mb-1">3</span>
+                                <div class="fw-bold">Tempel e-KTP Warga</div>
+                                <div class="text-muted" style="font-size: 0.76rem;">Tap fisik e-KTP warga ke sensor RC-522 hingga UID terisi, lalu simpan.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -295,6 +354,34 @@ document.addEventListener('DOMContentLoaded', function() {
     const btnSubmit = document.getElementById('btnSubmitBukaRekening');
     const listenBox = document.getElementById('adminTapListeningBox');
     let pollTimer = null;
+
+    function refreshAdminDeviceStatus() {
+        fetch('{{ route("portal-iot.status") }}')
+            .then(r => r.json())
+            .then(data => {
+                const badge = document.getElementById('adminBadgeDeviceStatus');
+                const txtStatus = document.getElementById('adminTxtDeviceStatus');
+                if (badge && txtStatus) {
+                    if (data.device_online) {
+                        badge.className = 'badge bg-success rounded-pill px-3 py-2';
+                        txtStatus.textContent = 'ESP32 ONLINE';
+                    } else {
+                        badge.className = 'badge bg-secondary rounded-pill px-3 py-2';
+                        txtStatus.textContent = 'STANDBY / OFFLINE';
+                    }
+                }
+                if (data.device_info) {
+                    const idEl = document.getElementById('adminTxtDeviceId');
+                    const ipEl = document.getElementById('adminTxtDeviceIp');
+                    if (idEl) idEl.textContent = data.device_info.device_id || '-';
+                    if (ipEl) ipEl.textContent = data.device_info.ip || '-';
+                }
+            })
+            .catch(() => {});
+    }
+
+    refreshAdminDeviceStatus();
+    setInterval(refreshAdminDeviceStatus, 2500);
 
     function updateSubmitState() {
         const hasUid = inpUid && inpUid.value.trim().length > 0;
