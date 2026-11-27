@@ -816,6 +816,10 @@
                 <i class="fa-solid fa-wifi"></i>
                 <span>Portal IoT RFID</span>
             </a>
+            <a href="{{ route('pengaduan.index') }}" class="nav-item-custom {{ request()->routeIs('pengaduan.*') ? 'active' : '' }}">
+                <i class="fa-solid fa-bullhorn"></i>
+                <span>Aspirasi &amp; Pengaduan</span>
+            </a>
             <a href="{{ route('posyandu.index') }}" class="nav-item-custom {{ request()->routeIs('posyandu.index') ? 'active' : '' }}">
                 <i class="fa-solid fa-baby"></i>
                 <span>Posyandu Balita</span>
@@ -1112,6 +1116,12 @@
                     <a href="{{ route('portal-iot.index') }}" class="p-3 bg-light rounded-3 text-center d-block text-decoration-none text-dark border">
                         <i class="fa-solid fa-wifi fs-4 text-success mb-1 d-block"></i>
                         <span class="small fw-semibold" style="font-size: 0.75rem;">Portal IoT RFID</span>
+                    </a>
+                </div>
+                <div class="col-4">
+                    <a href="{{ route('pengaduan.index') }}" class="p-3 bg-light rounded-3 text-center d-block text-decoration-none text-dark border">
+                        <i class="fa-solid fa-bullhorn fs-4 text-danger mb-1 d-block"></i>
+                        <span class="small fw-semibold" style="font-size: 0.75rem;">Pengaduan</span>
                     </a>
                 </div>
                 <div class="col-4">

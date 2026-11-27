@@ -10,6 +10,7 @@ use App\Http\Controllers\KeuanganController;
 use App\Http\Controllers\KoperasiController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\MigrasiController;
+use App\Http\Controllers\PengaduanController;
 use App\Http\Controllers\PosyanduController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RfidController;
@@ -91,6 +92,12 @@ Route::middleware('auth')->group(function () {
     Route::post('/surat', [SuratController::class, 'store'])->name('surat.store');
     Route::post('/surat/{id}/status', [SuratController::class, 'updateStatus'])->name('surat.status')->middleware('admin');
     Route::get('/surat/{id}/cetak', [SuratController::class, 'cetak'])->name('surat.cetak');
+
+    // Laporan / Aspirasi / Pengaduan Warga
+    Route::get('/pengaduan', [PengaduanController::class, 'index'])->name('pengaduan.index');
+    Route::post('/pengaduan', [PengaduanController::class, 'store'])->name('pengaduan.store');
+    Route::post('/pengaduan/{id}/status', [PengaduanController::class, 'updateStatus'])->name('pengaduan.status')->middleware('admin');
+    Route::delete('/pengaduan/{id}', [PengaduanController::class, 'destroy'])->name('pengaduan.destroy');
 
     // Posyandu Balita
     Route::get('/posyandu', [PosyanduController::class, 'index'])->name('posyandu.index');
