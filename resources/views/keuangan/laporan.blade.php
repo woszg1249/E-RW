@@ -165,11 +165,19 @@
                                 <td class="text-center small">{{ $i + 1 }}</td>
                                 <td class="text-center small">{{ \Carbon\Carbon::parse($item->tanggal)->format('d/m/Y') }}</td>
                                 <td>
-                                    <div class="fw-semibold text-dark">{{ $item->keterangan }}</div>
+                                    @if(auth()->user()->isAdmin() || ($item->nama_warga && $item->nama_warga === auth()->user()->nama) || $item->nama_warga === 'Kas Pengurus RT')
+                                        <div class="fw-semibold text-dark">{{ $item->keterangan }}</div>
+                                    @else
+                                        <div class="fw-semibold text-dark">{{ $item->jenis === 'masuk' ? 'Penerimaan Kas / Iuran Warga' : 'Pengeluaran Operasional Kas' }}</div>
+                                    @endif
                                 </td>
                                 <td class="small text-muted">
                                     <i class="fa-solid fa-user me-1 text-secondary"></i>
-                                    {{ $item->nama_warga ?: '-' }}
+                                    @if(auth()->user()->isAdmin() || ($item->nama_warga && $item->nama_warga === auth()->user()->nama) || $item->nama_warga === 'Kas Pengurus RT')
+                                        {{ $item->nama_warga ?: '-' }}
+                                    @else
+                                        Warga RW 19
+                                    @endif
                                 </td>
                                 <td class="text-end text-success fw-semibold">
                                     {{ $item->jenis === 'masuk' ? number_format($item->jumlah, 0, ',', '.') : '-' }}

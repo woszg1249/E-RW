@@ -11,7 +11,13 @@ class PosyanduController extends Controller
 {
     public function index(Request $request)
     {
+        $user = auth()->user();
         $query = Posyandu::with('warga');
+
+        // Privasi akun warga: hanya tampilkan data Posyandu milik keluarga sendiri
+        if ($user && method_exists($user, 'isWarga') && $user->isWarga()) {
+            $query->where('id_warga', $user->id);
+        }
 
         if ($request->filled('search')) {
             $s = $request->search;
@@ -29,7 +35,9 @@ class PosyanduController extends Controller
         }
 
         $posyanduList = $query->orderBy('tanggal_pemeriksaan', 'desc')->paginate(10)->withQueryString();
-        $wargaList = User::where('role', 'Warga')->orderBy('nama', 'asc')->get();
+        $wargaList = ($user && method_exists($user, 'isAdmin') && $user->isAdmin())
+            ? User::where('role', 'Warga')->orderBy('nama', 'asc')->get()
+            : collect();
         $standards = PosyanduGrowthService::STANDARDS;
 
         return view('posyandu.index', compact('posyanduList', 'wargaList', 'standards'));

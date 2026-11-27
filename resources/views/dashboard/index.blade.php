@@ -171,7 +171,8 @@
             </div>
         </div>
 
-        <!-- Transaksi Kas Terbaru -->
+        <!-- Transaksi Kas Terbaru (Admin) / Total Keuangan Saat Ini (Warga) -->
+        @if(auth()->user()->isAdmin())
         <div class="card-custom p-4">
             <div class="d-flex align-items-center justify-content-between mb-3">
                 <h5 class="fw-bold mb-0">Catatan Kas Terkini</h5>
@@ -214,6 +215,39 @@
                 </table>
             </div>
         </div>
+        @else
+        <div class="card-custom p-4">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <div>
+                    <h5 class="fw-bold mb-0">Total Keuangan Kas RW 19 Saat Ini</h5>
+                    <small class="text-muted">Ringkasan total kas wilayah (detail transaksi individu warga dirahasiakan)</small>
+                </div>
+                <a href="{{ route('keuangan.laporan') }}" class="text-success text-decoration-none small fw-bold">
+                    Laporan Keuangan <i class="fa-solid fa-arrow-right"></i>
+                </a>
+            </div>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="bg-success bg-opacity-10 border border-success border-opacity-25 rounded-3 p-3">
+                        <div class="small text-muted fw-semibold mb-1">Total Pemasukan Kas</div>
+                        <div class="fs-5 fw-bold text-success">Rp {{ number_format($totalMasuk, 0, ',', '.') }}</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="bg-danger bg-opacity-10 border border-danger border-opacity-25 rounded-3 p-3">
+                        <div class="small text-muted fw-semibold mb-1">Total Pengeluaran Kas</div>
+                        <div class="fs-5 fw-bold text-danger">Rp {{ number_format($totalKeluar, 0, ',', '.') }}</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="bg-primary bg-opacity-10 border border-primary border-opacity-25 rounded-3 p-3">
+                        <div class="small text-muted fw-semibold mb-1">Saldo Kas Saat Ini</div>
+                        <div class="fs-5 fw-bold text-primary">Rp {{ number_format($saldoKas, 0, ',', '.') }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
     </div>
 
     <!-- Right Side Cards: Quick Modules & Agenda Kegiatan -->
