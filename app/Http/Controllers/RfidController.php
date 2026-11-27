@@ -439,10 +439,17 @@ class RfidController extends Controller
      */
     public function portalStatus()
     {
+        $latestScan = Cache::get('latest_rfid_scan');
+        if (auth()->check() && !auth()->user()->isAdmin() && $latestScan) {
+            if (!empty($latestScan['registered']) && ($latestScan['user_id'] ?? null) != auth()->id()) {
+                $latestScan = null;
+            }
+        }
+
         return response()->json([
             'device_online' => (bool) Cache::get('rfid_device_online', false),
             'device_info' => Cache::get('rfid_device_info'),
-            'latest_scan' => Cache::get('latest_rfid_scan'),
+            'latest_scan' => $latestScan,
             'recent_scans' => $this->getRecentScans(),
         ]);
     }
@@ -487,9 +494,15 @@ class RfidController extends Controller
             return [];
         }
 
-        return IotKoperasiScan::with('user:id,nama,nik,rt,rw')
-            ->orderByDesc('scanned_at')
-            ->limit(10)
+        $query = IotKoperasiScan::with('user:id,nama,nik,rt,rw')
+            ->orderByDesc('scanned_at');
+
+        // Privasi akun warga: hanya tampilkan riwayat tap milik sendiri
+        if (auth()->check() && !auth()->user()->isAdmin()) {
+            $query->where('id_user', auth()->id());
+        }
+
+        return $query->limit(10)
             ->get()
             ->map(function ($row) {
                 return [

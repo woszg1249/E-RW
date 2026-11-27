@@ -13,11 +13,11 @@
                 <p class="text-muted small mb-0">Integrasi dompet digital kas warga untuk pembayaran iuran RT, integrasi bank sampah, dan tap IoT e-KTP.</p>
             </div>
             <div class="d-flex flex-wrap gap-2">
-                <button class="btn btn-outline-dark rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#modalAdminSimulasiIoT">
-                    <i class="fa-solid fa-nfc-directional me-1"></i> Simulator Reader IoT
-                </button>
+                <a href="{{ route('portal-iot.index') }}" class="btn btn-outline-dark rounded-pill px-3">
+                    <i class="fa-solid fa-wifi me-1"></i> Portal IoT Tap e-KTP
+                </a>
                 <button class="btn btn-primary-custom rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#modalBukaRekeningBaru">
-                    <i class="fa-solid fa-user-plus me-1"></i> Buka Rekening Warga
+                    <i class="fa-solid fa-user-plus me-1"></i> Buka Rekening (Tap e-KTP)
                 </button>
             </div>
         </div>
@@ -198,31 +198,42 @@
     </div>
 </div>
 
-<!-- Modal Buka Rekening Cepat untuk Warga -->
+<!-- Modal Buka Rekening Warga (Wajib Tap e-KTP Fisik di ESP32) -->
 <div class="modal fade" id="modalBukaRekeningBaru" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 rounded-4 shadow">
             <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title fw-bold">Aktivasi Rekening Bank Warga Baru</h5>
+                <h5 class="modal-title fw-bold">Aktivasi Rekening Bank Warga (Tap e-KTP)</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form action="{{ route('bank-warga.daftar') }}" method="POST">
                 @csrf
                 <div class="modal-body">
-                    <p class="text-muted small">Pilih warga RW 19 yang ingin diaktifkan rekening Bank Digital Warganya. Nomor rekening dibuat otomatis.</p>
+                    <p class="text-muted small">Pilih warga RW 19 lalu tempelkan fisik e-KTP ke alat ESP32. Rekening tidak bisa dibuat otomatis tanpa tap e-KTP.</p>
                     <div class="mb-3">
                         <label class="form-label fw-semibold small">Pilih Warga</label>
-                        <select name="id_user" class="form-select" required>
+                        <select name="id_user" id="selectWargaBukaRekening" class="form-select" required>
                             <option value="">-- Pilih Warga (Belum Berrekening) --</option>
                             @foreach($daftarWargaBelumPunya as $wb)
-                                <option value="{{ $wb->id }}">{{ $wb->nama }} (NIK: {{ $wb->nik ?? '-' }} • RT {{ $wb->rt ?? '06' }})</option>
+                                <option value="{{ $wb->id }}" data-uid="{{ $wb->rfid_uid ?? '' }}">{{ $wb->nama }} (NIK: {{ $wb->nik ?? '-' }} • RT {{ $wb->rt ?? '06' }})</option>
                             @endforeach
                         </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">UID Kartu e-KTP (Wajib Tap di ESP32)</label>
+                        <input type="text" name="rfid_uid" id="inpAdminBukaRfidUid" class="form-control font-monospace text-uppercase bg-light" placeholder="Tempelkan e-KTP ke sensor ESP32..." readonly required>
+                    </div>
+                    <div id="adminTapListeningBox" class="alert alert-primary border-primary border-opacity-25 rounded-3 text-center py-2 mb-0 small">
+                        <div class="spinner-grow spinner-grow-sm text-primary me-1" role="status"></div>
+                        <strong>Sedang Mendengarkan Sensor IoT ESP32...</strong>
+                        <div class="text-muted" style="font-size: 0.78rem;">Tempelkan fisik e-KTP warga ke sensor RC-522 agar UID terisi otomatis.</div>
                     </div>
                 </div>
                 <div class="modal-footer border-0 pt-0">
                     <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary-custom rounded-pill px-4">Buka Rekening</button>
+                    <button type="submit" id="btnSubmitBukaRekening" class="btn btn-primary-custom rounded-pill px-4" disabled>
+                        <i class="fa-solid fa-id-card me-1"></i> Buka Rekening
+                    </button>
                 </div>
             </form>
         </div>
@@ -273,100 +284,62 @@
 </div>
 @endforeach
 
-<!-- Modal Simulator Admin IoT Reader -->
-<div class="modal fade" id="modalAdminSimulasiIoT" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 rounded-4 shadow">
-            <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title fw-bold">Simulator IoT RFID / e-KTP Reader</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p class="text-muted small">Simulasi scan tap e-KTP warga pada mesin reader fisik di Pos RW 19.</p>
-                <div class="mb-3">
-                    <label class="form-label fw-semibold small">Pilih Warga untuk Simulasi Tap</label>
-                    <select id="selectWargaSimulator" class="form-select" onchange="updateSimulatorInputs(this)">
-                        <option value="">-- Pilih Warga --</option>
-                        @foreach($rekeningList as $rSim)
-                            <option value="{{ $rSim->id_user }}" data-nik="{{ $rSim->user->nik ?? '' }}" data-rfid="{{ $rSim->user->rfid_uid ?? 'UID-KTP-' . $rSim->id_user . '991' }}">
-                                {{ $rSim->user->nama ?? '-' }} (RT {{ $rSim->user->rt ?? '06' }})
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="row g-2 mb-3">
-                    <div class="col-6">
-                        <label class="form-label fw-semibold small">UID RFID e-KTP</label>
-                        <input type="text" id="simRfidUid" class="form-control form-control-sm font-monospace" placeholder="e.g. A3-4F-91-0C">
-                    </div>
-                    <div class="col-6">
-                        <label class="form-label fw-semibold small">NIK e-KTP</label>
-                        <input type="text" id="simNik" class="form-control form-control-sm font-monospace" placeholder="e.g. 327501...">
-                    </div>
-                </div>
-
-                <div id="adminIotResult" class="d-none alert alert-success small mb-0"></div>
-            </div>
-            <div class="modal-footer border-0 pt-0">
-                <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Tutup</button>
-                <button type="button" class="btn btn-primary rounded-pill px-4" onclick="jalankanAdminSimulasiTap()">
-                    <i class="fa-solid fa-nfc-directional me-1"></i> Simulasikan Tap Alat IoT
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
 @endsection
 
 @section('scripts')
 <script>
-    function updateSimulatorInputs(select) {
-        const opt = select.options[select.selectedIndex];
-        document.getElementById('simNik').value = opt.getAttribute('data-nik') || '';
-        document.getElementById('simRfidUid').value = opt.getAttribute('data-rfid') || '';
+document.addEventListener('DOMContentLoaded', function() {
+    const modalEl = document.getElementById('modalBukaRekeningBaru');
+    const selectWarga = document.getElementById('selectWargaBukaRekening');
+    const inpUid = document.getElementById('inpAdminBukaRfidUid');
+    const btnSubmit = document.getElementById('btnSubmitBukaRekening');
+    const listenBox = document.getElementById('adminTapListeningBox');
+    let pollTimer = null;
+
+    function updateSubmitState() {
+        const hasUid = inpUid && inpUid.value.trim().length > 0;
+        const hasWarga = selectWarga && selectWarga.value.length > 0;
+        if (btnSubmit) btnSubmit.disabled = !(hasUid && hasWarga);
     }
 
-    function jalankanAdminSimulasiTap() {
-        const rfid = document.getElementById('simRfidUid').value;
-        const nik = document.getElementById('simNik').value;
-        const resDiv = document.getElementById('adminIotResult');
-
-        if (!rfid && !nik) {
-            alert('Pilih warga atau masukkan NIK / UID kartu terlebih dahulu.');
-            return;
+    selectWarga?.addEventListener('change', function() {
+        const opt = this.options[this.selectedIndex];
+        const existingUid = opt ? (opt.getAttribute('data-uid') || '') : '';
+        if (existingUid) {
+            inpUid.value = existingUid;
+            listenBox.className = 'alert alert-success border-success rounded-3 text-center py-2 mb-0 small';
+            listenBox.innerHTML = '<i class="fa-solid fa-circle-check me-1"></i> e-KTP warga ini sudah terdaftar (UID: <b>' + existingUid + '</b>). Siap aktivasi rekening.';
+        } else {
+            inpUid.value = '';
+            listenBox.className = 'alert alert-primary border-primary border-opacity-25 rounded-3 text-center py-2 mb-0 small';
+            listenBox.innerHTML = '<div class="spinner-grow spinner-grow-sm text-primary me-1" role="status"></div><strong>Sedang Mendengarkan Sensor IoT ESP32...</strong><div class="text-muted" style="font-size: 0.78rem;">Tempelkan fisik e-KTP warga ke sensor RC-522 agar UID terisi otomatis.</div>';
         }
+        updateSubmitState();
+    });
 
-        fetch("{{ route('api.iot.bank_warga.tap') }}", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify({
-                rfid_uid: rfid,
-                nik: nik,
-                device_id: 'IOT-READER-POS-RW19'
-            })
-        })
-        .then(res => res.json())
-        .then(data => {
-            resDiv.classList.remove('d-none');
-            if (data.status === 'success') {
-                resDiv.className = 'alert alert-success small mb-0';
-                resDiv.innerHTML = `<strong><i class="fa-solid fa-check-circle me-1"></i> ${data.message}</strong><br>
-                Nama: <b>${data.data.nama}</b> (RT ${data.data.rt})<br>
-                No Rek: <b>${data.data.nomor_rekening}</b><br>
-                Saldo Terkini: <b class="text-success">${data.data.saldo_format}</b>`;
-            } else {
-                resDiv.className = 'alert alert-danger small mb-0';
-                resDiv.innerHTML = `<i class="fa-solid fa-triangle-exclamation me-1"></i> ${data.message}`;
-            }
-        })
-        .catch(err => {
-            resDiv.classList.remove('d-none');
-            resDiv.className = 'alert alert-danger small mb-0';
-            resDiv.innerHTML = 'Error: ' + err.message;
-        });
-    }
+    modalEl?.addEventListener('shown.bs.modal', function() {
+        if (pollTimer) clearInterval(pollTimer);
+        pollTimer = setInterval(function() {
+            fetch('{{ route("api.iot.rfid.latest") }}')
+                .then(r => r.json())
+                .then(data => {
+                    if (data && data.status === 'available' && data.data && data.data.rfid_uid) {
+                        inpUid.value = data.data.rfid_uid;
+                        listenBox.className = 'alert alert-success border-success rounded-3 text-center py-2 mb-0 small';
+                        listenBox.innerHTML = '<i class="fa-solid fa-circle-check me-1"></i> <strong>Kartu e-KTP Terdeteksi!</strong> UID: <b class="font-monospace">' + data.data.rfid_uid + '</b>';
+                        updateSubmitState();
+                    }
+                })
+                .catch(() => {});
+        }, 2000);
+    });
+
+    modalEl?.addEventListener('hidden.bs.modal', function() {
+        if (pollTimer) {
+            clearInterval(pollTimer);
+            pollTimer = null;
+        }
+    });
+});
 </script>
 @endsection

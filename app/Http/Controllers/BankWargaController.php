@@ -130,7 +130,7 @@ class BankWargaController extends Controller
     }
 
     /**
-     * Aktivasi / Pendaftaran rekening Bank Warga (otomatis mengaitkan data warga)
+     * Aktivasi / Pendaftaran rekening Bank Warga (WAJIB sudah tap e-KTP fisik)
      */
     public function daftarOtomatis(Request $request)
     {
@@ -139,9 +139,27 @@ class BankWargaController extends Controller
             $user = User::findOrFail($request->id_user);
         }
 
-        $rekening = BankWargaRekening::getOrCreateForUser($user, 'otomatis_akun');
+        $rawUid = $request->input('rfid_uid');
+        $cleanUid = $rawUid ? strtoupper(preg_replace('/[^a-zA-Z0-9]/', '', $rawUid)) : null;
 
-        return back()->with('success', "Rekening Bank Warga berhasil dibuka untuk {$user->nama} dengan nomor rekening: {$rekening->nomor_rekening}");
+        if ($cleanUid) {
+            $duplicate = User::where('rfid_uid', $cleanUid)->where('id', '!=', $user->id)->first();
+            if ($duplicate) {
+                return back()->with('error', "Kartu e-KTP UID {$cleanUid} sudah terdaftar milik {$duplicate->nama}.");
+            }
+            $user->update(['rfid_uid' => $cleanUid]);
+        }
+
+        if (empty($user->rfid_uid)) {
+            return back()->with('error', "Wajib tap fisik e-KTP {$user->nama} ke sensor IoT ESP32 terlebih dahulu sebelum membuka rekening!");
+        }
+
+        $rekening = BankWargaRekening::getOrCreateForUser($user, 'iot_tap_ktp');
+        if (empty($rekening->rfid_uid)) {
+            $rekening->update(['rfid_uid' => $user->rfid_uid]);
+        }
+
+        return back()->with('success', "Rekening Bank Warga berhasil dibuka untuk {$user->nama} (UID: {$user->rfid_uid}) dengan nomor rekening: {$rekening->nomor_rekening}");
     }
 
     /**
