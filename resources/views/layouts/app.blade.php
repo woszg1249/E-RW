@@ -313,6 +313,10 @@
             .top-navbar {
                 padding: 10px 12px !important;
             }
+            .top-navbar-title {
+                max-width: 145px;
+                font-size: 0.92rem !important;
+            }
             .view-mode-switcher .btn-mode span {
                 display: none !important;
             }
@@ -335,19 +339,27 @@
                 background: transparent !important;
             }
             .page-content {
-                padding: 12px 10px 80px 10px !important;
+                padding: 12px 10px 84px 10px !important;
             }
             .card-custom {
-                border-radius: 12px !important;
+                border-radius: 14px !important;
+            }
+            .card-custom.p-4 {
+                padding: 14px !important;
             }
             .table-responsive {
                 border-radius: 10px;
                 border: 1px solid #e2e8f0;
+                -webkit-overflow-scrolling: touch;
             }
             .table th, .table td {
                 white-space: nowrap;
                 padding: 8px 10px !important;
                 font-size: 0.82rem !important;
+            }
+            footer {
+                font-size: 0.75rem !important;
+                padding: 12px 10px !important;
             }
         }
 
@@ -420,7 +432,8 @@
 
         /* ===== ATURAN KETIKA MODE PHONE DIAKTIFKAN ===== */
         body.mode-phone {
-            padding-bottom: 70px;
+            padding-bottom: 74px;
+            overflow-x: hidden;
         }
 
         body.mode-phone #sidebar {
@@ -436,6 +449,8 @@
 
         body.mode-phone #content-wrapper {
             margin-left: 0 !important;
+            max-width: 100vw;
+            overflow-x: hidden;
         }
 
         body.mode-phone .top-navbar {
@@ -443,12 +458,30 @@
         }
 
         body.mode-phone .page-content {
-            padding: 14px 12px 80px 12px;
+            padding: 14px 12px 84px 12px;
         }
 
         body.mode-phone #mobileBottomNav {
             display: flex !important;
             justify-content: space-around;
+        }
+
+        body.dark-theme #mobileBottomNav {
+            background: #111827 !important;
+            border-top-color: #1f2937 !important;
+        }
+
+        body.dark-theme #mobileBottomNav .nav-mobile-item {
+            color: #9ca3af;
+        }
+
+        body.dark-theme #mobileBottomNav .nav-mobile-item.active {
+            color: #10b981;
+        }
+
+        body.dark-theme #offcanvasMobileMenu {
+            background: #111827 !important;
+            color: #f3f4f6 !important;
         }
 
         /* ===== ATURAN KETIKA MODE DESKTOP DIAKTIFKAN ===== */
@@ -819,14 +852,14 @@
     <!-- Content Wrapper -->
     <div id="content-wrapper">
         <!-- Top Navbar -->
-        <header class="top-navbar d-flex align-items-center justify-content-between">
-            <div class="d-flex align-items-center gap-3">
-                <button class="btn btn-light border-0 shadow-none" id="sidebarToggle" type="button">
+        <header class="top-navbar d-flex align-items-center justify-content-between gap-2">
+            <div class="d-flex align-items-center gap-2 gap-md-3 min-w-0">
+                <button class="btn btn-light border-0 shadow-none flex-shrink-0" id="sidebarToggle" type="button">
                     <i class="fa-solid fa-bars-staggered text-muted fs-5"></i>
                 </button>
-                <div class="d-none d-md-block">
-                    <h5 class="mb-0 fw-bold text-dark">@yield('page_title', 'Sistem Informasi E-RT RW Digital')</h5>
-                    <small class="text-muted">Kelurahan Bekasi Jaya, Bekasi Timur</small>
+                <div class="min-w-0">
+                    <h5 class="mb-0 fw-bold text-dark text-truncate top-navbar-title">@yield('page_title', 'Sistem Informasi E-RT RW Digital')</h5>
+                    <small class="text-muted d-none d-md-block">Kelurahan Bekasi Jaya, Bekasi Timur</small>
                 </div>
             </div>
 
@@ -1076,11 +1109,31 @@
                     </a>
                 </div>
                 <div class="col-4">
+                    <a href="{{ route('portal-iot.index') }}" class="p-3 bg-light rounded-3 text-center d-block text-decoration-none text-dark border">
+                        <i class="fa-solid fa-wifi fs-4 text-success mb-1 d-block"></i>
+                        <span class="small fw-semibold" style="font-size: 0.75rem;">Portal IoT RFID</span>
+                    </a>
+                </div>
+                <div class="col-4">
                     <a href="{{ route('keuangan.laporan') }}" class="p-3 bg-light rounded-3 text-center d-block text-decoration-none text-dark border">
                         <i class="fa-solid fa-file-invoice-dollar fs-4 text-success mb-1 d-block"></i>
                         <span class="small fw-semibold" style="font-size: 0.75rem;">Laporan Kas</span>
                     </a>
                 </div>
+                @if(auth()->user()->isAdmin())
+                <div class="col-4">
+                    <a href="{{ route('warga.index') }}" class="p-3 bg-light rounded-3 text-center d-block text-decoration-none text-dark border">
+                        <i class="fa-solid fa-users fs-4 text-primary mb-1 d-block"></i>
+                        <span class="small fw-semibold" style="font-size: 0.75rem;">Daftar Warga</span>
+                    </a>
+                </div>
+                <div class="col-4">
+                    <a href="{{ route('keuangan.index') }}" class="p-3 bg-light rounded-3 text-center d-block text-decoration-none text-dark border">
+                        <i class="fa-solid fa-wallet fs-4 text-warning mb-1 d-block"></i>
+                        <span class="small fw-semibold" style="font-size: 0.75rem;">Buku Kas RT</span>
+                    </a>
+                </div>
+                @endif
                 <div class="col-4">
                     <a href="{{ route('panduan') }}" class="p-3 bg-light rounded-3 text-center d-block text-decoration-none text-dark border">
                         <i class="fa-solid fa-book-open-reader fs-4 text-primary mb-1 d-block"></i>
@@ -1141,6 +1194,8 @@
 
         function applyViewMode(mode) {
             const body = document.body;
+            document.documentElement.classList.remove('mode-desktop', 'mode-phone');
+            document.documentElement.classList.add(mode === 'phone' ? 'mode-phone' : 'mode-desktop');
             body.classList.remove('mode-desktop', 'mode-phone');
             body.classList.add(mode === 'phone' ? 'mode-phone' : 'mode-desktop');
 
